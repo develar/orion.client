@@ -16,13 +16,10 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 	'orion/editor/projectionTextModel', //$NON-NLS-0$
 	'orion/Deferred', //$NON-NLS-0$
 	'orion/editor/util', //$NON-NLS-0$
-	'orion/PageLinks', //$NON-NLS-0$
-	'orion/URITemplate', //$NON-NLS-0$
 	'orion/webui/littlelib', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
-], function(messages, mTextView, mProjectionTextModel, Deferred, textUtil, PageLinks, URITemplate, lib, util) {
+], function(messages, mTextView, mProjectionTextModel, Deferred, textUtil, lib, util) {
 
-	/** @private */
 	function Tooltip (view) {
 		this._view = view;
 		var parent = view.getOptions("parent"); //$NON-NLS-0$
@@ -135,8 +132,6 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		 * of this tooltip)
 		*/
 		hide: function() {
-			if (!this.isVisible()) { return; }
-			
 			if (this.hover) {
 				this.hover.clearQuickFixes();
 			}
@@ -168,13 +163,14 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 
 			// Values that can be overridden by returned info			
 			this._target = undefined;
+			this._giveFocus = false;
 			this._offsetX = undefined;
 			this._offsetY = undefined;
 			this._position = undefined;
 			this._hoverArea = undefined;
 			this._preventTooltipClose = undefined;
 
-			// vlaues that are calculated
+			// values that are calculated
 			this._hoverInfo = undefined;
 			this._hoverRect = undefined;
 			this._tipRect = undefined;
@@ -236,23 +232,13 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		},
 		/**
 		 * @name show
-		 * @description Show the tooltip using the current target
+		 * @description Show the tooltip using the given target information
 		 * @function
-		 * @public
-		 * @param {boolean} autoHide If 'true' then the tooltip will call 'hide' once the 'hideDelay'
-		 * timer expires. if 'false' then the tooltip will remain visible until dismissed by the User.
-		 *
-		 * Note that if 'autoHide' is false then the tooltip will attempt to set the focus onto the
-		 * resulting tooltip.
-		*/
+		 * @param target
+		 * @param giveFocus
+		 */
 		show: function(target, giveFocus) {
-			if (!target) {
-				return;
-			}
-			
-			var tooltipDiv = this._tooltipDiv;
-			var tooltipContents = this._tooltipContents;
-			if (!tooltipDiv || !tooltipContents){
+			if (!target || !this._tooltipDiv || !this._tooltipContents) {
 				return;
 			}
 			
@@ -263,54 +249,121 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			}
 			
 			var info = target.getTooltipInfo();
-
 			if (!info) {
 				return;
 			}
 			
-			if (this.isVisible()) {
-				this.hide();
-			}
-			
-			// Capture optional positioning
-			this._position = info.position;
-			this._hoverArea = info.hoverArea;
-			this._offsetX = info.offsetX;
-			this._offsetY = info.offsetY;
+			// Hide clears any deferred tooltip contents
+			this.hide();
 			
 			this._target = target;
+			this._giveFocus = giveFocus;
+			if (info.preventTooltipClose){
+				this._preventTooltipClose = info.preventTooltipClose;
+			}
 			
+			// TODO Still need to set the size to auto before rendering the contents or some hovers will be too small (right ruler occurrences code projection)
+			var tooltipDiv = this._tooltipDiv;
+			var tooltipContents = this._tooltipContents;
 			tooltipDiv.style.left = tooltipDiv.style.right = tooltipDiv.style.width = tooltipDiv.style.height = 
-				tooltipContents.style.width = tooltipContents.style.height = "auto"; //$NON-NLS-0$
-			var tooltipDoc = tooltipDiv.ownerDocument;
-			var documentElement = tooltipDoc.documentElement;
+			tooltipContents.style.width = tooltipContents.style.height = "auto"; //$NON-NLS-0$		
 			
-			var contents = info.contents;
-			if (contents instanceof Array) {
-				contents = this._getAnnotationContents(contents, info.context);			
+			// Compute the contents of the tooltip
+			if (!this._computeContents(info)){
+				return;
 			}
 			
-			if (this.hover && info.offset !== undefined && !contents) {
-				var context = Object.create(null); 
-				if (info.context){
-					context = info.context;
+			this._computeTooltipPosition(info);
+			
+			
+			// If we are waiting on promises for content, don't open the tooltip until promises finish
+			if (!this._hoverInfo){
+				this._showContents();
+				if (this._giveFocus) {
+					this._setInitialFocus(this._tooltipDiv);
 				}
-				context.offset = info.offset;
-				this._hoverInfo = this.hover.computeHoverInfo(context);
+			}
+		},
+		
+		/**
+		 * @name _computeContents
+		 * @description Computes and returns the contents of a tooltip using the target info object
+		 * @function
+		 * @private
+		 * @param targetInfo the info object passed to show()
+		 * @returns returns an HTML node to put in the tooltip or <code>null</code>
+		 */
+		_computeContents: function _computeContents(targetInfo){
+			
+			/*
+			 * Empty or empty array = call hover service for dynamic content
+			 * Array = annotations
+			 * String = HTML text
+			 * Node = HTML node
+			 * ProjectionTextModel = code projection
+			 */
+			
+			// Annotations can display HTML nodes, projectionHovers or fall back on the hover service
+			var contents = targetInfo.contents;
+			if (contents instanceof Array) {
+				var annotationContents = this._getAnnotationContents(contents, targetInfo.context);			
+				if (annotationContents){
+					contents = annotationContents;
+				} else {
+					contents = null;
+				}
 			}
 			
-			if (typeof contents === "string") { //$NON-NLS-0$
-				tooltipContents.innerHTML = contents;
+			if (!contents){
+				if (this.hover && targetInfo.offset !== undefined){
+					var context = Object.create(null); 
+					if (targetInfo.context){
+						context = targetInfo.context;
+					}
+					context.offset = targetInfo.offset;
+					this._hoverInfo = this.hover.computeHoverInfo(context);
+				
+					if (this._hoverInfo) {
+						var self = this;
+						this._hoverInfo.forEach(function(info) {
+							Deferred.when(info, function (data) {
+								if (data) {
+									if (self._renderContent(data)) {
+										self._showContents();
+										if (self._giveFocus) {
+											self._setInitialFocus(self._tooltipDiv);
+										}
+										
+										// Adjust the hoverRect to match the new content
+										var divBounds = lib.bounds(self._tooltipDiv);
+										self._setHoverRect(self._hoverArea, divBounds);
+									}
+								}
+							}, function(error) {
+								if (typeof console !== "undefined") { //$NON-NLS-0$
+									console.log("Error computing hover tooltip"); //$NON-NLS-0$
+									console.log(error && error.stack);
+								}
+							});
+						});
+						return true;
+					}
+				}
+			} else if (typeof contents === "string") { //$NON-NLS-0$
+				this._tooltipContents.innerHTML = contents;
+				return true;
 			} else if (this._isNode(contents)) {
-				tooltipContents.appendChild(contents);
+				this._tooltipContents.appendChild(contents);
+				return true;
 			} else if (contents instanceof mProjectionTextModel.ProjectionTextModel) {
+				// TODO Do we have to adjust the location?
 				this._offsetX = -1;  // re-position to match the visible comment
 				this._offsetY = -3;  // re-position to match the visible comment
 				
 				var view = this._view;
 				var options = view.getOptions();
 				options.wrapMode = false;
-				options.parent = tooltipContents;
+				options.parent = this._tooltipContents;
 				var tooltipTheme = "tooltipTheme"; //$NON-NLS-0$
 				var theme = options.themeClass;
 				if (theme) {
@@ -331,12 +384,27 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 				contentsView.addEventListener("LineStyle", listener.onLineStyle); //$NON-NLS-0$
 				contentsView.setModel(contents);
 				var size = contentsView.computeSize();
-				tooltipContents.style.width = size.width + "px"; //$NON-NLS-0$
-				tooltipContents.style.height = size.height + "px"; //$NON-NLS-0$
+				this._tooltipContents.style.width = size.width + "px"; //$NON-NLS-0$
+				this._tooltipContents.style.height = size.height + "px"; //$NON-NLS-0$
 				contentsView.resize();
-			} else if (!(this._hoverInfo && this._hoverInfo.length)) {
-				return;
+				return true;
 			}
+			return false;
+		},
+		
+		_computeTooltipPosition: function _computeTooltipPosition(info){
+			// Capture optional positioning
+			this._position = info.position;
+			this._hoverArea = info.hoverArea;
+			this._offsetX = info.offsetX;
+			this._offsetY = info.offsetY;
+			
+			var tooltipDiv = this._tooltipDiv;
+			var tooltipContents = this._tooltipContents;
+			var documentElement = tooltipDiv.ownerDocument.documentElement;
+
+//			tooltipDiv.style.left = tooltipDiv.style.right = tooltipDiv.style.width = tooltipDiv.style.height = 
+//			tooltipContents.style.width = tooltipContents.style.height = "auto"; //$NON-NLS-0$		
 			
 			if (info.width) {
 				tooltipDiv.style.width = info.width + "px"; //$NON-NLS-0$
@@ -352,39 +420,10 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			tooltipDiv.style.top = top + "px"; //$NON-NLS-0$
 			tooltipDiv.style.maxHeight = (documentElement.clientHeight - top - 10) + "px"; //$NON-NLS-0$
 			tooltipDiv.style.opacity = "1"; //$NON-NLS-0$
-			
-			if (info.preventTooltipClose){
-				this._preventTooltipClose = info.preventTooltipClose;
-			}
-			
-			var self = this;
-			if (this._hoverInfo) {
-				this._hoverInfo.forEach(function(info) {
-					Deferred.when(info, function (data) {
-						if (data) {
-							if (self._renderContent(tooltipDoc, tooltipContents, data)) {
-								self._showTooltip(giveFocus, tooltipDiv);
-							
-								// Adjust the hoverRect to match the new content
-								var divBounds = lib.bounds(tooltipDiv);
-								self._setHoverRect(self._hoverArea, divBounds);
-							}
-						}
-					}, function(error) {
-						if (typeof console !== "undefined") { //$NON-NLS-0$
-							console.log("Error computing hover tooltip"); //$NON-NLS-0$
-							console.log(error && error.stack);
-						}
-					});
-				});
-			}
-			
-			// Delay the showing of a tootip with no 'static' contents
-			if (contents) {
-				this._showTooltip(giveFocus, tooltipDiv);
-			}
 		},
-		_showTooltip: function(giveFocus, tooltipDiv) {
+		
+		
+		_showContents: function _showContents() {
 			if (this.isVisible()){
 				return;
 			}
@@ -443,11 +482,12 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			this._setHoverRect(this._hoverArea, tipRect);
 			
 			this._tooltipDiv.style.visibility = "visible"; //$NON-NLS-0$
-
-			if (giveFocus === true) {
-				this._setInitialFocus(tooltipDiv);
-			}
 		},
+		
+		_update: function _update(){
+			this._tooltipDiv.resize();
+		},
+		
 		_setHoverRect: function(hoverArea, tipRect) {
 			var left = Math.min(hoverArea.left, tipRect.left);
 			var top = Math.min(hoverArea.top, tipRect.top);
@@ -489,18 +529,20 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 				toFocus.focus();
 			}
 		},
-		_renderContent: function(tooltipDoc, tooltipContents, data) {
+		_renderContent: function(data) {
+			
+			var document = this._tooltipDiv.ownerDocument;
 			if (typeof data.content === 'undefined' && typeof data.uriTemplate === 'undefined') { //$NON-NLS-0$ //$NON-NLS-1$
 			    return false;
 			}
-			var sectionDiv = util.createElement(tooltipDoc, "div"); //$NON-NLS-0$;
+			var sectionDiv = util.createElement(document, "div"); //$NON-NLS-0$;
 			// render the title, if any
 			if (data.title) {
-				var titleDiv = util.createElement(tooltipDoc, "div"); //$NON-NLS-0$;
+				var titleDiv = util.createElement(document, "div"); //$NON-NLS-0$;
 				titleDiv.innerHTML = this.hover.renderMarkDown ? this.hover.renderMarkDown(data.title) : data.title;
 				sectionDiv.appendChild(titleDiv);
 			}
-			var contentDiv = util.createElement(tooltipDoc, "div"); //$NON-NLS-0$
+			var contentDiv = util.createElement(document, "div"); //$NON-NLS-0$
 			switch(data.type) { //$NON-NLS-0$
 				case 'delegatedUI': { //$NON-NLS-0$
 					// The delegated UI is not included in the 8.0 release, see Bug 449240.
@@ -533,11 +575,11 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 					break;
 				}
 				default: {
-					contentDiv.appendChild(tooltipDoc.createTextNode(data.content));
+					contentDiv.appendChild(document.createTextNode(data.content));
 				}
 			}
 			sectionDiv.appendChild(contentDiv);
-			tooltipContents.appendChild(sectionDiv);
+			this._tooltipContents.appendChild(sectionDiv);
 			return true;
 		},
 		
