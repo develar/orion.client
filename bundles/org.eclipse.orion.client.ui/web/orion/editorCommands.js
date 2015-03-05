@@ -533,7 +533,7 @@ define([
 					getTooltipInfo: function() {
 						return editor._getTooltipInfo(this.x, this.y);
 					}
-					}, true);
+					}, false, true);
 				}
 			});
 			this.commandService.addCommand(showTooltipCommand);

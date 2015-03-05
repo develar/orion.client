@@ -832,8 +832,7 @@ define("orion/editor/editor", [ //$NON-NLS-0$
 						if (!self._listener)
 							return;
 							
-						if (!tooltip.OKToHover(self._listener.lastMouseX, self._listener.lastMouseY)) { return; }
-						tooltip.show({
+						tooltip.onHover({
 							clientX: self._listener.lastMouseX,
 							clientY: self._listener.lastMouseY,
 							x: e.x,							
