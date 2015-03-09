@@ -47,13 +47,14 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			textUtil.addEventListener(document, "mousedown", this._mouseDownHandler = function(event) { //$NON-NLS-0$
 				if (!self.isVisible()) { return; }
 				if (textUtil.contains(tooltipDiv, event.target || event.srcElement)) { return; }
-				self.hide();
-			}, true);
-			textUtil.addEventListener(document, "mousemove", this._mouseMoveHandler = function(event) { //$NON-NLS-0$
-				if (!self.isVisible()) { return; }
-				if (self.OKToHide(event.clientX, event.clientY)) {
+				if (!self._locked){
 					self.hide();
 				}
+			}, true);
+			textUtil.addEventListener(document, "mousemove", this._mouseMoveHandler = function(event) { //$NON-NLS-0$
+				if (!self.isVisible() || self._locked || self._hasFocus()) { return; }
+				if (self._isInRect(self._hoverRect, event.clientX, event.clientY)){ return; }
+				self.hide();
 			}, true);
 			textUtil.addEventListener(tooltipDiv, "mouseover", /* @callback */ function(event) { //$NON-NLS-0$
 				self._inTooltip = true;
@@ -63,7 +64,9 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			}, false);
 			textUtil.addEventListener(tooltipDiv, "keydown", function(event) { //$NON-NLS-0$
 				if (event.keyCode === 27) {
-					self.hide();
+					if (!self._locked){
+						self.hide();
+					}
 				}
 			}, false);
 			this._view.addEventListener("Destroy", function() { //$NON-NLS-0$
@@ -126,7 +129,6 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			}
 
 			// Values that can be overridden by returned info			
-			this._target = undefined;
 			this._x = undefined;
 			this._y = undefined;
 			this._width = undefined;
@@ -152,25 +154,10 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		isVisible: function() {
 			return this._tooltipDiv && this._tooltipDiv.style.visibility === "visible"; //$NON-NLS-0$
 		},
-		/**
-		 * @name OKToHide
-		 * @description Returns whether an existing hover should be hidden or if it should stay open.
-		 * A hover may stay open if it has focus or the user's mouse x and y coordinates are within the bounding
-		 * rectangle around the tooltip.
-		 * @function
-		 * @param x Location to check if within bounds, usually a cursor location
-		 * @param y Location to check if within bounds, usually a cursor location
-		 * @returns {Boolean} returns whether the existing hover should be closed
-		 */
-		OKToHide: function(x, y) {
-			if (!this.isVisible() || this._locked || this._hasFocus()) {
-				return false;
-			}
-			return !this._isInRect(this._hoverRect, x, y);
-		},
+
 		_processInfo: function(target, update) {
 			// Remember where the cursor is
-			this._target = target;
+			this._lastTarget = target;
 			
 			var newTooltipContents;
 			if (update && this._tooltipContents) {
@@ -187,10 +174,11 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			
 			// Now get any info from plugins
 			if (info) {
+				
+				this._captureLocationInfo(info);
+				
 				// Any immediate info to render ?
 				if (info.contents) {
-					this._captureLocationInfo(info);
-					
 					// Remember where we came from
 					if (info.context) {
 						info.contents.source = info.context.source;
@@ -216,7 +204,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 								if (data) {
 									if (self._renderPluginContent(newTooltipContents, data)) {
 										if (self.isVisible()) {
-											this._tooltipDiv.resize();
+											self._tooltipDiv.resize();
 										} else {
 											self._showContents(newTooltipContents, update);
 										}
@@ -279,6 +267,9 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		 * @param giveFocus If true forces the focus onto the tooltip (used for F2 processing)
 		 */
 		update: function(target) {
+			if (!target){
+				return;
+			}
 			this._processInfo(target, true);
 		},
 		
@@ -299,7 +290,6 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		},
 		_computeTooltipPosition: function _computeTooltipPosition(){
 			var tooltipDiv = this._tooltipDiv;
-			var tooltipContents = this._tooltipContents;
 			var documentElement = tooltipDiv.ownerDocument.documentElement;
 			
 			if (this._width) {
@@ -332,7 +322,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			// HACK! Fake a contentBox if necessary
 			if (!this._hoverArea) {
 				// Use the whole line
-				var curOffset = this._view.getOffsetAtLocation(this._target.x, this._target.y);
+				var curOffset = this._view.getOffsetAtLocation(this._lastTarget.x, this._lastTarget.y);
 				if (curOffset >= 0) {
 					var start = this._view.getNextOffset(curOffset, 
 										{ unit: "word", count: -1}); //$NON-NLS-0$
@@ -341,7 +331,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 					this._setContentRange(start, end);
 				} else {
 					this._hoverArea = {
-						left: this._target.clientX-8, top: this._target.clientY -8,
+						left: this._lastTarget.clientX-8, top: this._lastTarget.clientY -8,
 						width: 16, height: 16
 					};
 				}
@@ -469,7 +459,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		_isNode: function (obj) {
 			return typeof Node === "object" ? obj instanceof Node : //$NON-NLS-0$
 				obj && typeof obj === "object" && typeof obj.nodeType === "number" && typeof obj.nodeName === "string"; //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
-		},	
+		},
 		_setContentRange: function(start, end) {
 			this._contentRangeStart = start;
 			this._contentRangeEnd = end;
