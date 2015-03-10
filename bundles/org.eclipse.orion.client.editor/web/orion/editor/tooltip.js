@@ -20,7 +20,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
 ], function(messages, mTextView, mProjectionTextModel, Deferred, textUtil, lib, util) {
 
-	function Tooltip (view) {
+function Tooltip (view) {
 		this._view = view;
 		var parent = view.getOptions("parent"); //$NON-NLS-0$
 		this._create(parent ? parent.ownerDocument : document);
@@ -93,8 +93,9 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		 * @public
 		*/
 		hide: function() {
-			if (!this.isVisible())
+			if (!this.isVisible()){
 				return;
+			}
 				
 			if (this.hover) {
 				this.hover.clearQuickFixes();
@@ -129,15 +130,15 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			}
 
 			// Values that can be overridden by returned info			
-			this._x = undefined;
-			this._y = undefined;
-			this._width = undefined;
-			this._height = undefined;
-			this._offsetX = undefined;
-			this._offsetY = undefined;
-			this._position = undefined;
-			this._hoverArea = undefined;
-			this._locked = undefined;
+//			this._x = undefined;
+//			this._y = undefined;
+//			this._width = undefined;
+//			this._height = undefined;
+//			this._offsetX = undefined;
+//			this._offsetY = undefined;
+//			this._position = undefined;
+//			this._hoverArea = undefined;
+//			this._locked = undefined;
 
 			// values that are calculated
 			this._hoverInfo = undefined;
@@ -179,11 +180,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 				
 				// Any immediate info to render ?
 				if (info.contents) {
-					// Remember where we came from
-					if (info.context) {
-						info.contents.source = info.context.source;
-					}
-					if (this._renderImmediateInfo(newTooltipContents, info.contents)) {
+					if (this._renderImmediateInfo(newTooltipContents, info.contents, info.context)) {
 						this._showContents(newTooltipContents, update);
 					}
 				}
@@ -287,6 +284,15 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			this._offsetY = info.offsetY;
 			this._position = info.position;
 			this._hoverArea = info.hoverArea;
+			
+			if (info.context){
+				// Adjust the tooltip for folding comments to exactly cover the unfolded text location
+				if (info.context.rulerStyle && info.context.rulerStyle.indexOf("folding") >= 0){ //$NON-NLS-0$
+					this._offsetX = -1;
+					this._offsetY = -3;
+				}
+			}
+			
 		},
 		_computeTooltipPosition: function _computeTooltipPosition(){
 			var tooltipDiv = this._tooltipDiv;
@@ -308,14 +314,14 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			tooltipDiv.style.opacity = "1"; //$NON-NLS-0$
 		},		
 		_showContents: function _showContents(newContentsDiv, update) {
+			// TODO Hide is performing two operations, make the tooltip invisible and clearing out any stored data
 			if (this.isVisible() && !update) {
 				this.hide();
 			}
 
-			if (!this._tooltipContents) {
-				this._tooltipContents = newContentsDiv;
-				this._tooltipDiv.appendChild(newContentsDiv);
-			}
+			// TODO Potential for an empty tooltip or duplicated content, what if both static and deferred content are added?
+			this._tooltipContents = newContentsDiv;
+			this._tooltipDiv.appendChild(newContentsDiv);
 			
 			this._computeTooltipPosition();
 			
@@ -558,10 +564,10 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		 * Node = HTML node
 		 * ProjectionTextModel = code projection
 		 */
-		_renderImmediateInfo: function _renderImmediateInfo(contentsDiv, contents) {						
+		_renderImmediateInfo: function _renderImmediateInfo(contentsDiv, contents, context) {						
 			// If it's an annotation then process the annotation(s) to get the actual data
 			if (contents instanceof Array) {
-				contents = this._getAnnotationContents(contents, contents.source);			
+				contents = this._getAnnotationContents(contents, context);			
 				if (!contents) {
 					return false;
 				}
@@ -614,10 +620,10 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		 * @function
 		 * @private
 		 * @param annotations the list of annotations to render
-		 * @param source optional object containing where the annotations are displayed (ruler, editor, etc.)
+		 * @param context optional object containing where the annotations are displayed (ruler, editor, etc.)
 		 * @returns returns document node containing rendered tooltip content
 		 */
-		_getAnnotationContents: function(annotations, source) {
+		_getAnnotationContents: function(annotations, context) {
 			var annotation;
 			var newAnnotations = [];
 			for (var j = 0; j < annotations.length; j++) {
@@ -689,7 +695,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			
 			// Don't show quickfixes for ruler annotations (left or right side)
 			var showQuickfixes = self.hover ? true : false;
-			if (showQuickfixes && source && source.indexOf('ruler') >= 0){ //$NON-NLS-0$
+			if (showQuickfixes && context && context.source && context.source.indexOf('ruler') >= 0){ //$NON-NLS-0$
 				showQuickfixes = false;
 			}			
 			
@@ -705,8 +711,9 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 					}
 					return html;
 				} else {
+					// TODO Test that the source here is still correct
 					// Don't create a projection model if we are in the editor it will just duplicate the content the user is looking at
-					if (source && source === 'editor'){ //$NON-NLS-0$
+					if (context && context.source && context.source === 'editor'){ //$NON-NLS-0$
 						return null;
 					}
 					var newModel = new mProjectionTextModel.ProjectionTextModel(baseModel);
