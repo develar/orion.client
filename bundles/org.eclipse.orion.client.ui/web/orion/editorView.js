@@ -261,6 +261,44 @@ define([
 				}
 			}
 		},
+		recordSession: function() {
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			var inputManager = this.inputManager;
+			if (textView && inputManager) {
+				var metadata = inputManager.getFileMetadata();
+				if (metadata) {
+					var session = sessionStorage.editorViewSection ? JSON.parse(sessionStorage.editorViewSection) : {};
+					var selections = editor.getSelections().map(function(s) { return s.getOrientedSelection(); });
+					session[metadata.Location] = {
+						ETag: metadata.ETag,
+						topIndex: textView.getTopIndex(),
+						selections: selections,
+					};
+					sessionStorage.editorViewSection = JSON.stringify(session);
+				}
+			}
+		},
+		loadSession: function(evt) {
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			var inputManager = this.inputManager;
+			if (textView && inputManager) {
+				var metadata = inputManager.getFileMetadata();
+				if (metadata) {
+					var session = sessionStorage.editorViewSection ? JSON.parse(sessionStorage.editorViewSection) : {};
+					var locationSession = session[metadata.Location];
+					if (locationSession && locationSession.ETag === metadata.ETag) {
+						evt.session = {
+							apply: function() {
+								editor.setSelections(locationSession.selections);
+								textView.setTopIndex(locationSession.topIndex);
+							}
+						};
+					}
+				}
+			}
+		},
 		_init: function() {
 			var editorPreferences = null;
 			if(this.preferences) {
@@ -455,7 +493,13 @@ define([
 				localSettings = new EditorSettings({local: true, editor: editor, themePreferences: themePreferences, preferences: editorPreferences});
 			}
 			var liveEditSession = new LiveEditSession(serviceRegistry, editor);
+			var recordListener = function() {
+				self.recordSession();
+			};
+			inputManager.addEventListener("InputChanging", recordListener); //$NON-NLS-0$
+			window.addEventListener("beforeunload", recordListener); //$NON-NLS-0$
 			inputManager.addEventListener("InputChanged", function(event) { //$NON-NLS-0$
+				self.loadSession(event);
 				var textView = editor.getTextView();
 				if (textView) {
 					var label;
