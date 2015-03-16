@@ -15,53 +15,30 @@ var connect = require('connect'),
     orionFile = require('./lib/file'),
     orionNode = require('./lib/node'),
     orionWorkspace = require('./lib/workspace'),
-    orionNodeStatic = require('./lib/orionode_static'),
-    orionStatic = require('./lib/orion_static'),
     term = require('term.js');
-
-var LIBS = path.normalize(path.join(__dirname, 'lib/')),
-    ORION_CLIENT = path.normalize(path.join(__dirname, '../../'));
-
-function handleError(err) {
-	throw err;
-}
 
 function startServer(options) {
 	options = options || {};
-	options.maxAge = typeof options.maxAge === "number" ? options.maxAge : undefined;
 	var workspaceDir = options.workspaceDir, configParams = options.configParams;
-	try {
-		var appContext = new AppContext({fileRoot: '/file', workspaceDir: workspaceDir, configParams: configParams});
-
-		// HTTP server
-		var app = connect()
-      .use(term.middleware())
-			// static code
-			.use(orionNodeStatic(path.normalize(path.join(LIBS, 'orionode.client/'))))
-			.use(orionStatic({
-				orionClientRoot: ORION_CLIENT,
-				maxAge: options.maxAge
-			}))
-			// API handlers
+	var appContext = new AppContext({fileRoot: '/file', workspaceDir: workspaceDir, configParams: configParams});
+	var app = connect()
+			.use(term.middleware())
 			.use(orionFile({
-				root: '/file',
-				workspaceDir: workspaceDir
-			}))
+						 root: '/file',
+						 workspaceDir: workspaceDir
+					 }))
 			.use(orionWorkspace({
-				root: '/workspace',
-				fileRoot: '/file',
-				workspaceDir: workspaceDir
-			}))
+						 root: '/workspace',
+						 fileRoot: '/file',
+						 workspaceDir: workspaceDir
+					 }))
 			.use(orionNode({
-				appContext: appContext,
-				root: '/node'
-			}));
+						 appContext: appContext,
+						 root: '/node'
+					 }));
 
-		app.appContext = appContext;
-		return app;
-	} catch (e) {
-		handleError(e);
-	}
+	app.appContext = appContext;
+	return app;
 }
 
 module.exports = startServer;

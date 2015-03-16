@@ -1,10 +1,10 @@
-
-
-
-
 # Ignore npm artifacts
 node_modules/
 npm-debug.log
+Dockerfile
+.dockerignore
+publish.sh
+.project
 
 # Ignore any Maven artifacts that creep into the repo
 target/
@@ -13,8 +13,4 @@ target/
 .workspace/
 test/.test_workspace/
 
-# Ignore Cloud Foundry support
-**/bundles/org.eclipse.orion.client.cf/*
-
-# Ignore client js tests
-**/bundles/**/js-tests/
+lib/orion.client/

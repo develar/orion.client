@@ -188,7 +188,7 @@ module.exports = function(options) {
 	 * Handler begins here
 	 */
 	return connect()
-	.use(connect.json())
+	.use(require('body-parser').json())
 	.use(resource(fileRoot, {
 		GET: function(req, res, next, rest) {
 			if (writeEmptyFilePathError(res, rest)) {

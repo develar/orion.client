@@ -42,7 +42,7 @@ module.exports = function(options) {
 	}
 
 	return connect()
-	.use(connect.json())
+	.use(require('body-parser').json())
 	.use(resource(workspaceRoot, {
 		GET: function(req, res, next, rest) {
 			var workspaceRootUrl = originalWorkspaceRoot(req);
