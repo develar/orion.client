@@ -1599,6 +1599,9 @@ parseStatement: true, parseSourceElement: true */
         if (extra.range) {
             this.range = [startIndex, 0];
         }
+        if(extra.directSourceFile) {
+        	this.sourceFile = extra.directSourceFile; //ORION for Tern
+        }
     }
 
     function WrappingNode(startToken) {
@@ -1607,6 +1610,9 @@ parseStatement: true, parseSourceElement: true */
         }
         if (extra.range) {
             this.range = [startToken.start, 0];
+        }
+        if(extra.directSourceFile) {
+        	this.sourceFile = extra.directSourceFile; //ORION for Tern
         }
     }
 
@@ -1690,6 +1696,8 @@ parseStatement: true, parseSourceElement: true */
             }
             if (extra.range) {
                 this.range[1] = lastIndex;
+                this.start = this.range[0]; //ORION for Tern
+            	this.end = lastIndex; //ORION for Tern
             }
             if (extra.attachComment) {
                 this.processComment();
@@ -2541,7 +2549,7 @@ parseStatement: true, parseSourceElement: true */
         catch(e) {
             if (extra.errors) {
                 recordError(e);
-                return null;
+                return recoveredNode(node, Syntax.Identifier);
             } else {
                 throw e;
             }
@@ -3720,11 +3728,14 @@ parseStatement: true, parseSourceElement: true */
                 break;
             }
             sourceElement = parseSourceElement();
-            if (typeof sourceElement === 'undefined' || start === index) {
+            if (typeof sourceElement === 'undefined' || sourceElement == null) {
+                break;
+            }
+            sourceElements.push(sourceElement);
+            if(start === index) {
                 break;
             }
             start = index;
-            sourceElements.push(sourceElement);
         }
 
         expectSkipTo('}');
@@ -4156,6 +4167,8 @@ parseStatement: true, parseSourceElement: true */
                 extra.trailingComments = [];
                 extra.leadingComments = [];
             }
+            
+            extra.directSourceFile = options.directSourceFile; //ORION for Tern
         }
 
         try {
@@ -4338,16 +4351,23 @@ parseStatement: true, parseSourceElement: true */
     /**
      * @description Returns a node to fill in incomplete tree locations while recovering
      * @param {Node} node The node context we tried to parse. Used to collect range and loc infos
+     * @param {String} expectedType The expected type of node (if known)
+     * @param {String} expectedValue The expected value of the node (if known)
      * @since 2.0
      */
-    function recoveredNode(node) {
+    function recoveredNode(node, expectedType, expectedValue) {
         var recovered = {
-            type: Syntax.Identifier,
-            name: '\$\$_RECOVERED_\$\$'
+            type: 'RecoveredNode',
+            name: '',
+            recovered: true,
+            expectedValue: expectedValue,
+            expectedType: expectedType
         };
         if (extra.range) {
             recovered.range = node.range;
             recovered.range[1] = index;
+            recovered.start = node.range;
+            recovered.end = index;
         }
         if (extra.loc) {
             recovered.loc = node.loc;
@@ -4413,6 +4433,12 @@ parseStatement: true, parseSourceElement: true */
     exports.tokenize = tokenize;
 
     exports.parse = parse;
+
+  //ORION
+    exports.isIdentifierPart = isIdentifierPart;
+    exports.isIdentifierStart = isIdentifierStart;
+    //for Tern
+    exports.isIdentifierChar = isIdentifierPart;
 
     // Deep copy.
    /* istanbul ignore next */

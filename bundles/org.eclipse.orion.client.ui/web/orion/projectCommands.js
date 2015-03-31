@@ -13,9 +13,9 @@
 define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 'orion/commands', 'orion/Deferred', 'orion/webui/dialogs/DirectoryPrompterDialog',
  'orion/commandRegistry', 'orion/i18nUtil', 'orion/webui/dialogs/PromptDialog', 'orion/widgets/projects/ProjectOptionalParametersDialog',
  'orion/fileCommands', 'orion/editorCommands', 'orion/EventTarget',
- 'orion/URITemplate', 'orion/PageLinks', 'orion/objects', 'orion/preferences'],
+ 'orion/URITemplate', 'orion/PageLinks', 'orion/objects', 'orion/preferences', 'orion/metrics'],
 	function(require, messages, lib, mCommands, Deferred, DirectoryPrompterDialog, mCommandRegistry, i18nUtil, PromptDialog, ProjectOptionalParametersDialog, FileCommands, mEditorCommands, EventTarget,
-		URITemplate, PageLinks, objects, mPreferences){
+		URITemplate, PageLinks, objects, mPreferences, mMetrics){
 		var projectCommandUtils = {};
 
 		var progress;
@@ -170,6 +170,13 @@ define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 
 	 * @param context.commandService
 	 */
 	function runDeploy(enhansedLaunchConf, context){
+		var liveEditWrapper = lib.$("#liveEditSwitchWrapper"); //$NON-NLS-0$
+		if (liveEditWrapper) {
+			var liveEditCheck = lib.$(".orionSwitchCheck", liveEditWrapper);
+			var liveEdit = liveEditCheck && liveEditCheck.checked;
+		}
+		var startTime = Date.now();
+
 		if(context.deployService.getDeployProgressMessage){
 			context.projectClient.formPluginLaunchConfiguration(enhansedLaunchConf).then(function(pluginLaunchConf){
 				context.deployService.getDeployProgressMessage(context.project, pluginLaunchConf).then(function(message){
@@ -190,6 +197,9 @@ define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 
 			
 			context.projectClient.formPluginLaunchConfiguration(enhansedLaunchConf).then(function(pluginLaunchConf){
 				context.deployService.deploy(context.project, pluginLaunchConf).then(function(result){
+					var interval = Date.now() - startTime;
+					mMetrics.logTiming("deployment", "deploy", interval, pluginLaunchConf.Type + (liveEdit ? " (live edit on)" : ""));
+
 					if(!result){
 						return;
 					}
@@ -234,6 +244,9 @@ define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 
 					}
 
 				}, function(error){
+					var interval = Date.now() - startTime;
+					mMetrics.logTiming("deployment", "deploy (error)", interval, pluginLaunchConf.Type + (liveEdit ? " (live edit on)" : ""));
+
 					if(error.Retry && error.Retry.parameters){
 						if(error.forceShowMessage){
 							context.errorHandler(error);
@@ -601,6 +614,7 @@ define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 
 					var launchConfToPass = objects.clone(item);
 					launchConfToPass.Params = params;
 
+					var startTime = Date.now();
 					projectClient.getProjectDeployService(item.ServiceId, item.Type).then(function(service){
 						var progressMessage = start ? messages["starting"] : messages["stopping"]; //$NON-NLS-1$ //$NON-NLS-0$
 						if(service && (start ? service.start : service.stop)){
@@ -609,6 +623,9 @@ define(['require', 'i18n!orion/navigate/nls/messages', 'orion/webui/littlelib', 
 								sharedLaunchConfigurationDispatcher.dispatchEvent({type: "changeState", newValue: item });
 							}
 							(start ? service.start : service.stop)(launchConfToPass).then(function(result){
+								var interval = Date.now() - startTime;
+								mMetrics.logTiming("deployment", start ? "restart" : "stop", interval, launchConfToPass.Type);
+
 								item.status = result;
 								if(sharedLaunchConfigurationDispatcher){
 									sharedLaunchConfigurationDispatcher.dispatchEvent({type: "changeState", newValue: item });
