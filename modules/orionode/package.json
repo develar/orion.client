@@ -5,8 +5,8 @@
   "homepage": "http://eclipse.org/orion/",
   "bugs": "https://bugs.eclipse.org/bugs/enter_bug.cgi?product=Orion&component=Node",
   "dependencies": {
-    "body-parser": "^1.12.1",
-    "connect": "~3.3.4",
+    "body-parser": "^1.12.2",
+    "connect": "~3.3.5",
     "deferred-fs": "~0.3.2",
     "node-inspector": "~0.9.2",
     "rimraf": "~2.3.2",
@@ -14,11 +14,11 @@
     "term.js": "0.0.4"
   },
   "optionalDependencies": {
-    "pty.js": "0.2.6"
+    "pty.js": "0.2.7-1"
   },
   "devDependencies": {
     "mocha": "*",
-    "requirejs": "~2.1.16",
+    "requirejs": "~2.1.17",
     "supertest": "*",
     "grunt": "~0.4.5",
     "grunt-cli": "~0.1.13",
