@@ -42,6 +42,9 @@ define(['domReady', 'orion/xhr', 'orion/xsrfUtils', './common'], function(domRea
 					if(mypostrequest.status === 201){
 						common.showStatusMessage(mypostrequest.statusText);
 						common.addClass(authForm, regCompleteClass);
+						if (!common.getEmailConfigured()) {
+							common.confirmLogin(e, username, password);
+						}
 					}
 					common.removeClass(authForm, processClass);
 					authFormElements.removeAttribute("disabled");
@@ -122,6 +125,9 @@ define(['domReady', 'orion/xhr', 'orion/xsrfUtils', './common'], function(domRea
 	}
 
 	domReady(function() {
+		common.checkUserCreationEnabled();
+		common.checkEmailConfigured();
+
 		/* initialize metrics collection for this page */
 		var url = new URL("../metrics", window.location); //$NON-NLS-0$
 		xhr("GET", url.href, { //$NON-NLS-0$

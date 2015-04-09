@@ -25,6 +25,7 @@ define([
 	'orion/settings/ui/PluginSettings',
 	'orion/widgets/themes/ThemePreferences',
 	'orion/widgets/themes/editor/ThemeData',
+	'orion/widgets/themes/ThemeImporter',
 	'orion/widgets/settings/SplitSelectionLayout',
 	'orion/widgets/plugin/PluginList',
 	'orion/widgets/settings/UserSettings',
@@ -34,7 +35,7 @@ define([
 	'orion/editorPreferences',
 	'orion/metrics'
 ], function(messages, Deferred, mGlobalCommands, PageUtil, lib, objects, URITemplate, 
-		ThemeBuilder, SettingsList, mThemePreferences, editorThemeData, SplitSelectionLayout, PluginList, UserSettings,
+		ThemeBuilder, SettingsList, mThemePreferences, editorThemeData, editorThemeImporter, SplitSelectionLayout, PluginList, UserSettings,
 		GitSettings,
 		EditorSettings, ThemeSettings, mEditorPreferences,
 		mMetrics) {
@@ -259,22 +260,27 @@ define([
 			this.selectCategory(id);
 
 			lib.empty(this.table);
-		
+
 			this.updateToolbar(id);
 
 			var themeSettingsNode = document.createElement('div'); //$NON-NLS-0$
 			this.table.appendChild(themeSettingsNode);
 
 			var editorTheme = new editorThemeData.ThemeData();
+			var themeImporter = new editorThemeImporter.ThemeImporter();
 			var themePreferences = new mThemePreferences.ThemePreferences(this.preferences, editorTheme);
-			
 			var editorThemeWidget = new ThemeBuilder({ commandService: this.commandService, preferences: themePreferences, themeData: editorTheme, toolbarId: 'editorThemeSettingsToolActionsArea', serviceRegistry: this.registry}); //$NON-NLS-0$
-				
-			var command = { name:messages.Import, tip:messages['Import a theme'], id:0, callback: editorTheme.importTheme.bind(editorTheme) };
-			editorThemeWidget.addAdditionalCommand( command );
 
+			var command = {
+				name:messages.Import,
+				tip:messages['Import a theme'],
+				id: "orion.importTheme",
+				callback: themeImporter.showImportThemeDialog.bind(themeImporter)
+			};
+			this.commandService.addCommand(command);
+			this.commandService.registerCommandContribution('themeCommands', "orion.importTheme", 4); //$NON-NLS-1$ //$NON-NLS-0$
 			var editorPreferences = new mEditorPreferences.EditorPreferences (this.preferences);
-			
+
 			this.themeSettings = new ThemeSettings({
 				registry: this.registry,
 				preferences: editorPreferences,
@@ -285,7 +291,7 @@ define([
 				commandService: this.commandService,
 				userClient: this.userClient
 			}, themeSettingsNode);
-			
+
 			this.themeSettings.show();
 		},
 		
@@ -424,7 +430,7 @@ define([
 		},
 		
 		handleError: function( error ){
-			console.log( error );
+			window.console.log( error );
 		}
 	});
 	return SettingsContainer;

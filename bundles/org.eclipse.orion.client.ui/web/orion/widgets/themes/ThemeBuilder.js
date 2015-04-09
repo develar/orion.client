@@ -25,6 +25,11 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 	var editorLanguage, editorTheme, originalTheme, currentTheme, revertBtn, deleteBtn ,saveBtn, themeNameInput;
 	var protectedThemes = [];
 	var defaultColor = "#ff80c0";
+	var htmlExclusions = [];
+	var jsExclusions = ["editorThemePropertyName", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
+	var javaExclusions = ["editorThemeColorEntityColor", "editorThemeFunctionParameterColor", "editorThemePropertyName", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
+	var cssExclusions = ["editorThemeColorEntityColor", "editorThemeControlColor", "editorThemeLanguageVariableColor", "editorThemeOperatorColor", "editorThemeFunctionParameterColor", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
+
 	var scopeList = [
 		{
 			display:"font size", //$NON-NLS-0$
@@ -37,7 +42,7 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			id:"editorThemeBackground", //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"font-color", //$NON-NLS-0$
+			display:"font color", //$NON-NLS-0$
 			objPath:["styles.color"], //$NON-NLS-0$
 			id:"editorThemeColor", //$NON-NLS-0$
 			value:defaultColor
@@ -62,9 +67,24 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			id:"editorThemeCommentColor",  //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"constant",//$NON-NLS-0$
-			objPath:["styles.constant.color","styles.constant.numeric.color","styles.constant.numeric.numeric.hex.color"], //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			display:"language variable",//$NON-NLS-0$
+			objPath:["styles.variable.language.color"], //$NON-NLS-0$
+			id:"editorThemeLanguageVariableColor",  //$NON-NLS-0$
+			value:defaultColor
+		},{
+			display:"language constant",//$NON-NLS-0$
+			objPath:["styles.constant.color"], //$NON-NLS-0$
 			id:"editorThemeConstantColor",  //$NON-NLS-0$
+			value:defaultColor
+		},{
+			display:"number",//$NON-NLS-0$
+			objPath:["styles.constant.numeric.color","styles.constant.numeric.hex.color"], //$NON-NLS-1$ //$NON-NLS-0$
+			id:"editorThemeNumericConstantColor",  //$NON-NLS-0$
+			value:defaultColor
+		},{
+			display:"string",//$NON-NLS-0$
+			objPath:["styles.string.color","styles.string.quoted.double.color","styles.string.quoted.single.color"], //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			id:"editorThemeStringColor",  //$NON-NLS-0$
 			value:defaultColor
 		},{
 			display:"entity",//$NON-NLS-0$
@@ -72,12 +92,12 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			id:"editorThemeColorEntityColor",  //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"keyword-control",//$NON-NLS-0$
+			display:"keyword (control)",//$NON-NLS-0$
 			objPath:["styles.keyword.control.color"], //$NON-NLS-0$
 			id:"editorThemeControlColor", //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"keyword-operator",//$NON-NLS-0$
+			display:"keyword (operator)",//$NON-NLS-0$
 			objPath:["styles.keyword.operator.color"], //$NON-NLS-0$
 			id:"editorThemeOperatorColor", //$NON-NLS-0$
 			value:defaultColor
@@ -112,17 +132,22 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			id:"editorThemeDocumentationTask", //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"CSS - Property name color",//$NON-NLS-0$
+			display:"CSS property name color",//$NON-NLS-0$
 			objPath:["styles.support.type.propertyName.color"], //$NON-NLS-0$
 			id:"editorThemePropertyName", //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"HTML - Tag",//$NON-NLS-0$
+			display:"HTML tag",//$NON-NLS-0$
 			objPath:["styles.meta.tag.color"], //$NON-NLS-0$
 			id:"editorThemeMetaTag", //$NON-NLS-0$
 			value:defaultColor
 		},{
-			display:"Selection Background",//$NON-NLS-0$
+			display:"HTML attribute",//$NON-NLS-0$
+			objPath:["styles.meta.tag.attribute.color"], //$NON-NLS-0$
+			id:"editorThemeMetaTagAttribute", //$NON-NLS-0$
+			value:defaultColor
+		},{
+			display:"selection background",//$NON-NLS-0$
 			objPath:["styles.textviewContent ::selection.backgroundColor", "styles.textviewContent ::-moz-selection.backgroundColor", "styles.textviewSelection.backgroundColor", "styles.textviewSelectionUnfocused.backgroundColor"], //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 			id:"editorSelection", //$NON-NLS-0$
 			value:defaultColor
@@ -186,7 +211,7 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 					'<button id="editorThemeRevert" class="editorThemeCleanButton"><span class="git-sprite-revert editorThemeButton"></span></button>'+
 				'</div>' +
 				'<ul class="scopeList" id="scopeList">' +
-					generateScopeList() +
+					generateScopeList(jsExclusions) +
 				'</ul>' +
 			'</div>' +//$NON-NLS-0$
 			ThemeBuilder.prototype.template;
@@ -295,7 +320,7 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 	ThemeBuilder.prototype.apply = apply;
 	
 	//generates the html structure for list of scopes
-	function generateScopeList(){
+	function generateScopeList(hiddenValues){
 		var htmlString = "";
 		var ieClass = util.isIE ? "-ie" : ""; //$NON-NLS-0$
 
@@ -310,8 +335,10 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 				}
 				htmlString += "</select></li>";//$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 			}
-			else
-				htmlString = htmlString + "<li><span>" + scopeList[i].display + "</span><input id='"+scopeList[i].id+"' class='colorpicker-input" + ieClass + "' type='color' value='" + scopeList[i].value + "'></li>";//$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			else {
+				var hideValueCSS = hiddenValues.indexOf(scopeList[i].id) >= 0 ? "style='display: none'" : ""; //$NON-NLS-0$
+				htmlString = htmlString + "<li " + hideValueCSS + "><span>" + scopeList[i].display + "</span><input id='"+scopeList[i].id+"' class='colorpicker-input" + ieClass + "' type='color' value='" + scopeList[i].value + "'></li>";//$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			}
 		}
 		return htmlString;
 	}
@@ -430,28 +457,45 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 		this.settings['name'] = theme;
 	}
 	ThemeBuilder.prototype.changeTheme = changeTheme;
-		
+
 	function changeLanguage(){
 		var language = editorLanguage.options[editorLanguage.selectedIndex].value;
-		
+
 		switch (language) {
 			case "javascript":
 				mSetup.setupView(jsExample, "js"); //$NON-NLS-0$
+				this.updateLHS(jsExclusions);
 				break;
 			case "html":
 				mSetup.setupView(htmlExample, "html"); //$NON-NLS-0$
+				this.updateLHS(htmlExclusions);
 				break;
 			case "css":
 				mSetup.setupView(cssExample, "css"); //$NON-NLS-0$
+				this.updateLHS(cssExclusions);
 				break;
 			case "java":
 				mSetup.setupView(javaExample, "java"); //$NON-NLS-0$
+				this.updateLHS(javaExclusions);
 				break;
 		}
-		
+
 		return true;
 	}
 	ThemeBuilder.prototype.changeLanguage = changeLanguage;
+
+	function updateLHS(exclusions) {
+		for (var i = scopeList.length - 1; i >= 0; i--) {
+			document.getElementById(scopeList[i].id).parentNode.style.display = "";
+		}
+
+		if (exclusions && exclusions.length > 0) {
+			for (i = exclusions.length - 1; i >= 0; i--) {
+				document.getElementById(exclusions[i]).parentNode.style.display = "none";
+			}
+		}
+	}
+	ThemeBuilder.prototype.updateLHS = updateLHS;
 
 	function selectTheme(name) {
 		this.preferences.getTheme(function(themeStyles) {

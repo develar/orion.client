@@ -13,6 +13,7 @@
 define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],function(PageUtil, xsrfUtils, PageLinks) {
     var errorClass = "has-error";
     var successClass = "success";
+    var emailConfigured = true;
 
     function addClass(ele,cls) {
       if (!hasClass(ele,cls)) ele.className += " "+cls;
@@ -35,7 +36,7 @@ define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],func
                         var responseObject = JSON.parse(mypostrequest.responseText);
                         showStatusMessage(responseObject.error);
                     } else {
-                        finishLogin(username, password);
+                        finishLogin();
                     }
                 }
             };
@@ -47,6 +48,56 @@ define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],func
             xsrfUtils.addCSRFNonce(mypostrequest);
             mypostrequest.send(parameters);
         }
+    }
+
+    function checkEmailConfigured() {
+        var checkemailrequest = new XMLHttpRequest();
+        checkemailrequest.onreadystatechange = function() {
+            if (checkemailrequest.readyState === 4) {
+                if (checkemailrequest.status === 200) {
+                    var responseObject = JSON.parse(checkemailrequest.responseText);
+                    if (responseObject.EmailConfigured === false) {
+                        if (document.getElementById("forgotPassword")) {
+                            document.getElementById("forgotPassword").style.display = 'none';
+                        }
+
+                        if (document.getElementById("email")) {
+                            document.getElementById("email").style.display = 'none';
+                        }
+                        
+                        emailConfigured = false;
+                    }
+                }
+            }
+        };
+
+        checkemailrequest.open("POST", "../useremailconfirmation/cansendemails", true);
+        checkemailrequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        checkemailrequest.setRequestHeader("Orion-Version", "1");
+        checkemailrequest.send();
+    }
+
+    function checkUserCreationEnabled() {
+        var checkusersrequest = new XMLHttpRequest();
+        checkusersrequest.onreadystatechange = function() {
+            if (checkusersrequest.readyState === 4) {
+                if (checkusersrequest.status === 200) {
+                    var responseObject = JSON.parse(checkusersrequest.responseText);
+                    userCreationEnabled = responseObject.CanAddUsers;
+                    forceUserEmail = responseObject.ForceEmail;
+                    registrationURI = responseObject.RegistrationURI;
+                    if (!userCreationEnabled && !registrationURI) {
+                        window.location.replace("LoginWindow.html");
+                    }
+                }
+            }
+        };
+
+        checkusersrequest.open("POST", "../login/canaddusers", true);
+        checkusersrequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        checkusersrequest.setRequestHeader("Orion-Version", "1");
+        xsrfUtils.addCSRFNonce(checkusersrequest);
+        checkusersrequest.send();
     }
 
     function copyText(original, destination) {
@@ -306,17 +357,25 @@ define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],func
         });
     }
 
+    function getEmailConfigured() {
+    	return emailConfigured;
+    }
+
     setUpPage();
 
     return {
         addClass: addClass,
+        checkEmailConfigured: checkEmailConfigured,
+        checkUserCreationEnabled: checkUserCreationEnabled,
         copyText: copyText,
         confirmLogin: confirmLogin,
         createOAuthLink: createOAuthLink,
         decodeBase64: decodeBase64,
         getParam: getParam,
+        getRedirect: getRedirect,
         passwordSwitcher: passwordSwitcher,
         removeClass: removeClass,
-        showStatusMessage: showStatusMessage
+        showStatusMessage: showStatusMessage,
+        getEmailConfigured: getEmailConfigured
     };
 });

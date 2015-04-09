@@ -10,7 +10,7 @@
  ******************************************************************************/
 /*eslint-env amd, browser*/
 /*global $ URL*/
-define(['domReady', 'orion/xhr', './jquery', 'orion/URL-shim'], function(domReady, xhr) {
+define(['domReady', 'orion/xhr', './common', './jquery', 'orion/URL-shim'], function(domReady, xhr, common) {
 
 	var newsRssFeedUrl = "http://planetorion.org/news/feed/";
 
@@ -61,12 +61,16 @@ define(['domReady', 'orion/xhr', './jquery', 'orion/URL-shim'], function(domRead
 	}
 
 	domReady(function() {
+		common.checkUserCreationEnabled();
+
 		var doc = $(document);
 		var pos = $("#tryIt").offset().top;
 		var buttonClone = $("#tryIt").clone();
 		var buttonWidthOriginal = $("#tryIt").outerWidth();
 		var btnOffset = ($("body").width() > 640) ? 10 : 0;
 
+		var signinBtn = $("#signinBtn");
+		signinBtn.attr("href", signinBtn.attr("href") + "?redirect=" + common.getRedirect());
 
 		/* initialize metrics collection for this page */
 		var url = new URL("../metrics", window.location); //$NON-NLS-0$
@@ -96,6 +100,12 @@ define(['domReady', 'orion/xhr', './jquery', 'orion/URL-shim'], function(domRead
 
 		// Listen for resize changes
 		window.addEventListener("resize", function() {
+			// Get screen size (inner/outerWidth, inner/outerHeight)
+			pos = $(".buttonClone").length ? $(".buttonClone").offset().top : pos;
+		}, false);
+
+		// Listen for orientation changes
+		window.addEventListener("orientationchange", function() {
 			// Get screen size (inner/outerWidth, inner/outerHeight)
 			pos = $(".buttonClone").length ? $(".buttonClone").offset().top : pos;
 		}, false);

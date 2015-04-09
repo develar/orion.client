@@ -253,6 +253,10 @@ function Tooltip (view) {
 		 * @param update Whether to update the existing tooltip contents or open a new tooltip
 		 */
 		_processInfo: function(info, update) {
+			if (!this._tooltipDiv){
+				return;
+			}
+			
 			var newTooltipContents;
 			if (update && this._tooltipContents) {
 				this._tooltipContents.innerHTML = "";
@@ -286,9 +290,16 @@ function Tooltip (view) {
 					this._hoverPromises = this.hover.computeHoverInfo(info.context);
 					if (this._hoverPromises) {
 						var self = this;
-						this._hoverPromises.forEach(function(hoverPromise) {
+						var promises = this._hoverPromises.slice(0);
+						promises.forEach(function(hoverPromise) {
 							Deferred.when(hoverPromise, function (data) {
-								hoverPromise.resolved = true;  // resolved
+								// Remove this promise from the list so we don't try cancelling it while processing (see hide())
+								if (self._hoverPromises){
+									var index = self._hoverPromises.indexOf(hoverPromise);
+									if (index >= 0){
+										self._hoverPromises.splice(index, 1);
+									}
+								}
 								if (data) {
 									if (self._renderPluginContent(newTooltipContents, data)) {
 										if (data.offsetStart){
@@ -301,7 +312,7 @@ function Tooltip (view) {
 									}
 								}
 							}, function(error) {
-								if (typeof console !== "undefined") { //$NON-NLS-0$
+								if (console && error && error.name !== 'Cancel') { //$NON-NLS-0$ //$NON-NLS-1$
 									console.log("Error computing hover tooltip"); //$NON-NLS-0$
 									console.log(error && error.stack);
 								}
@@ -561,7 +572,19 @@ function Tooltip (view) {
 			var yOK = y >= rect.top && y <= (rect.top + rect.height);
 			return xOK && yOK;
 		},
+		mapOffset: function(offset, parent) {
+			var textView = this._view;
+			var model = textView.getModel();
+			if (model.getBaseModel) {
+				offset = model.mapOffset(offset, parent);
+			}
+			return offset;
+		},
 		_computeRectangleFromOffset: function(start, end) {
+			// The offsets from annotations/hovering don't account for the projection model (folded comments) Bug 456715
+			start = this.mapOffset(start);
+			end = this.mapOffset(end);
+			
 			var tv = this._view;
 			var curLine = tv.getLineAtOffset(start);
 			var endLine = tv.getLineAtOffset(end);
@@ -618,8 +641,10 @@ function Tooltip (view) {
 							iframe.type = "text/html"; //$NON-NLS-0$
 							iframe.sandbox = "allow-scripts allow-same-origin allow-forms"; //$NON-NLS-0$
 							iframe.style.border = "none"; //$NON-NLS-0$
-							iframe.style.width = "auto"; //$NON-NLS-0$
-							iframe.style.height = "auto"; //$NON-NLS-0$
+							iframe.style.width = "100%"; //$NON-NLS-0$
+							iframe.style.height = "100%"; //$NON-NLS-0$
+							// TODO The iframe computed height is always 3px smaller than the tooltip, giving the impression of inconsistent padding
+							this._tooltipDiv.style.paddingBottom = "5px";  //$NON-NLS-0$
 							iframe.srcdoc = data.content;
 							if (data.width) {
 								iframe.style.width = data.width;
@@ -627,6 +652,8 @@ function Tooltip (view) {
 							if (data.height) {
 								iframe.style.height = data.height;
 							}
+							sectionDiv.style.height = '100%';  //$NON-NLS-0$ // Height should grow on resize
+							contentsDiv.style.height = '100%';  //$NON-NLS-0$
 							sectionDiv.appendChild(iframe);
 						}
 						break;
@@ -696,7 +723,7 @@ function Tooltip (view) {
 				// TODO This is a hack to compute the projection size we will have in the tooltip, we remove the child after computing
 				this._tooltipDiv.appendChild(contentsDiv);
 				// Use the editor colors with a simple border
-				this._tooltipDiv.classList.add("textviewTooltipCodeProjection");
+				this._tooltipDiv.classList.add("textviewTooltipCodeProjection"); //$NON-NLS-0$
 				var size = contentsView.computeSize();
 				// Adjust the size for the padding
 				contentsDiv.style.width = (size.width+8) + "px"; //$NON-NLS-0$
@@ -793,6 +820,7 @@ function Tooltip (view) {
 				inEditor = false;
 			}			
 			
+			// TODO This is where we create projection models for occurrences for no good reason (Bug 463515)
 			if (annotations.length === 1) {
 				annotation = annotations[0];
 				if (annotation.title !== undefined) {
@@ -834,7 +862,7 @@ function Tooltip (view) {
 				}
 				return tooltipHTML;
 			}
-		},
+		}
 		
 	};
 	return {Tooltip: Tooltip};
