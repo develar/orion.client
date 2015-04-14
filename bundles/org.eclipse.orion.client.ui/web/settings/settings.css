@@ -592,12 +592,13 @@ div.page section:last-child {
 }
 
 .colorpicker-input {
+	border: 1px solid #ddd;
+	border-radius: 100%;
     padding: 0;
     margin: 0;
     width: 14px;
     height: 14px;
     cursor: pointer;
-    border: 0;
     float: right;
     background: none;
     position:relative;
@@ -613,12 +614,14 @@ div.page section:last-child {
 _:-moz-tree-row(hover), .colorpicker-input { /* Firefox  HACK */
 		width:19px;
 		height: 14px;
+		border: none;
 }
 
 @media screen and (min-color-index:0) and(-webkit-min-device-pixel-ratio:0) { @media /* SAFARI 6.1 + HACK */
 {
 	.colorpicker-input { 
 		width:60px;
+		border-radius: 0;
 	}
 	input.colorpicker-input[type=color]{
 		text-transform:lowercase;

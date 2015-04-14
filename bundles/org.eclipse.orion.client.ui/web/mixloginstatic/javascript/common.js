@@ -20,7 +20,9 @@ define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],func
     }
 
     function confirmLogin(e, username, password) {
-        e.preventDefault();
+        if (e !== undefined) {
+            e.preventDefault();
+        }
 
         if (!username) {
             username = document.getElementById('username').value.trim();
@@ -87,7 +89,10 @@ define(['orion/PageUtil', 'orion/xsrfUtils', 'orion/PageLinks', './jquery'],func
                     forceUserEmail = responseObject.ForceEmail;
                     registrationURI = responseObject.RegistrationURI;
                     if (!userCreationEnabled && !registrationURI) {
-                        window.location.replace("LoginWindow.html");
+                        var loginURL = "LoginWindow.html";
+                        var redirect = getRedirect() ? "?redirect=" + getRedirect() : "";
+                        var redirectURL = loginURL + redirect;
+                        window.location.replace(redirectURL);
                     }
                 }
             }

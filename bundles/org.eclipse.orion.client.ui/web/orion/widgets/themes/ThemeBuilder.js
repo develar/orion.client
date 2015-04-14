@@ -28,7 +28,7 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 	var htmlExclusions = [];
 	var jsExclusions = ["editorThemePropertyName", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
 	var javaExclusions = ["editorThemeColorEntityColor", "editorThemeFunctionParameterColor", "editorThemePropertyName", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
-	var cssExclusions = ["editorThemeColorEntityColor", "editorThemeControlColor", "editorThemeLanguageVariableColor", "editorThemeOperatorColor", "editorThemeFunctionParameterColor", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
+	var cssExclusions = ["editorThemeColorEntityColor", "editorThemeControlColor", "editorThemeLanguageVariableColor", "editorThemeOperatorColor", "editorThemeFunctionParameterColor", "editorThemeLogicalOperatorColor", "editorThemeMetaTag", "editorThemeMetaTagAttribute"];
 
 	var scopeList = [
 		{
@@ -57,6 +57,12 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			id:"editorThemeRulerColor", //$NON-NLS-0$
 			value:defaultColor
 		},{
+			display:"ruler border color",//$NON-NLS-0$
+			objPath:["styles.textviewLeftRuler.borderColor","styles.textviewRightRuler.borderColor"],  //$NON-NLS-1$ //$NON-NLS-0$
+			id:"editorThemeRulerBorderColor", //$NON-NLS-0$
+			value:defaultColor
+		},
+		{
 			display:"current line background",//$NON-NLS-0$
 			objPath:["styles.annotationLine.currentLine.backgroundColor"],  //$NON-NLS-0$
 			id:"editorThemeColorCurrentLineBackground",  //$NON-NLS-0$
@@ -105,6 +111,11 @@ function(messages, mCommands, mCommandRegistry, lib, mSetup, colors, util, jsExa
 			display:"function parameter",//$NON-NLS-0$
 			objPath:["styles.variable.parameter.color"], //$NON-NLS-0$
 			id:"editorThemeFunctionParameterColor", //$NON-NLS-0$
+			value:defaultColor
+		},{
+			display:"comparison and logical operators", //$NON-NLS-0$
+			objPath:["styles.punctuation.operator.color"], //$NON-NLS-0$
+			id:"editorThemeLogicalOperatorColor", //$NON-NLS-0$
 			value:defaultColor
 		},{
 			display:"write occurrence background", //$NON-NLS-0$
