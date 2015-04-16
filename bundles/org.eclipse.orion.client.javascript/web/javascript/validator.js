@@ -60,8 +60,7 @@ define([
 			'no-fallthrough' : 2,  //$NON-NLS-0$
 			'no-empty-block' : 0,  //$NON-NLS-0$
 			'valid-typeof': 2,  //$NON-NLS-0$
-			'no-sparse-arrays': 1,  //$NON-NLS-0$
-			'no-non-nls-literals': 0  //$NON-NLS-0$
+			'no-sparse-arrays': 1  //$NON-NLS-0$
 		},
 		
 		/**
