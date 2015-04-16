@@ -18,8 +18,10 @@ define([
         'orion/widgets/themes/editor/ThemeData',
         'orion/objects'
 ], function(messages, dialog, ImportThemeDialogTemplate, urlImportDialog, themeData, objects) {
-        function ThemeImporter() {
+        var luminanceDarkLimit = 70;
 
+
+        function ThemeImporter() {
         }
 
         function colorToHex(color) {
@@ -61,7 +63,7 @@ define([
                 if (xml.attributes.length > 0) {
                     for (var j = 0; j < xml.attributes.length; j++) {
                         var attribute = xml.attributes.item(j);
-                        obj[attribute.nodeName] = attribute.nodeValue;
+                        obj[attribute.nodeName] = attribute.value;
                     }
                 }
             } else if (xml.nodeType === 3) { // text
@@ -228,19 +230,16 @@ define([
             var themeJson = xmlToJson(xml); //convert to Json
             var newStyle = themeData.getDefaultTheme();
 
-            //finds the name tag
-            for (var i = 0; i < themeJson.plist[1].dict.key.length; i++) {
-                if (themeJson.plist[1].dict.key[i]["#text"] === "name") { //$NON-NLS-0$
-                    newStyle.name = themeJson.plist[1].dict.string[i]["#text"];
-                    newStyle.className = newStyle.name.replace(/\s+/g, '');
-                }
-            }
             var dictKey = themeJson.plist[1].dict.array.dict[0].dict.key;
             var dictString = themeJson.plist[1].dict.array.dict[0].dict.string;
 
             //finds the general attributes
-            for (i = 0; i<dictKey.length; i++) {
+            for (var i = 0; i < dictKey.length; i++) {
                 if (dictKey[i]["#text"] === "background" && dictString[i]["#text"].length < 8) { //$NON-NLS-0$
+                    if (calculateLuminance(dictString[i]["#text"]) < luminanceDarkLimit) {
+                        /* use a dark base theme if luminance is low (the theme being imported is dark) */
+                        newStyle = themeData.getDefaultTheme({dark: true});
+                    }
                     newStyle.styles.backgroundColor = dictString[i]["#text"];
                 }
                 else if (dictKey[i]["#text"] === "foreground" && dictString[i]["#text"].length < 8) { //$NON-NLS-0$
@@ -257,21 +256,32 @@ define([
                     newStyle.styles["textviewContent ::-moz-selection"].backgroundColor = dictString[i]["#text"];
                 }
             }
+
+            //finds the name tag
+            for (i = 0; i < themeJson.plist[1].dict.key.length; i++) {
+                if (themeJson.plist[1].dict.key[i]["#text"] === "name") { //$NON-NLS-0$
+                    newStyle.name = themeJson.plist[1].dict.string[i]["#text"];
+                    newStyle.className = newStyle.name.replace(/\s+/g, '');
+                }
+            }
+
             //finds the scope attributes
             var restKey = themeJson.plist[1].dict.array.dict;
 
-            for (i = 1; i< restKey.length; i++) {
-                try{
+            for (i = 1; i < restKey.length; i++) {
+                try {
                     var target = restKey[i].string[0]["#text"].split(",");
+                    var targetKey = target[k].trim();
 
                     for (var k = 0; k < target.length; k++) {
-                        if (target[k].trim() === "Comment") { //$NON-NLS-0$
+                        if (targetKey === "Comment") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (var l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (var l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.comment.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.comment.block.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.comment.line.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -283,11 +293,12 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Keyword") { //$NON-NLS-0$
+                        else if (targetKey === "Keyword") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.keyword.control.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -297,11 +308,12 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Tag name") { //$NON-NLS-0$
+                        else if (targetKey === "Tag name") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.meta.tag.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -313,11 +325,12 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Tag attribute") { //$NON-NLS-0$
+                        else if (targetKey === "Tag attribute") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.meta.tag.attribute.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -329,12 +342,13 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "HTML: Doctype") { //$NON-NLS-0$
+                        else if (targetKey === "HTML: Doctype") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.meta.tag.doctype = {};
                                         newStyle.styles.meta.tag.doctype.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -345,11 +359,12 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "CSS: Property") { //$NON-NLS-0$
+                        else if (targetKey === "CSS: Property") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.support.type.propertyName.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -359,13 +374,14 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Variable" || target[k].trim() === "Function argument") { //$NON-NLS-1$ //$NON-NLS-0$
+                        else if (targetKey === "Variable" || targetKey === "Function argument") { //$NON-NLS-1$ //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.variable.language.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.variable.other.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.variable.parameter.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -377,13 +393,14 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Constant" || target[k].trim() === "Number") { //$NON-NLS-1$ //$NON-NLS-0$
+                        else if (targetKey === "Constant" || targetKey === "Number") { //$NON-NLS-1$ //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.constant.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.constant.numeric.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.constant.numeric.hex.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -395,13 +412,14 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "String") { //$NON-NLS-0$
+                        else if (targetKey === "String") { //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.string.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.string.quoted.single.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.string.quoted.double.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -413,11 +431,12 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Storage" || target[k].trim() === "Storage type") { //$NON-NLS-1$ //$NON-NLS-0$
+                        else if (targetKey === "Storage" || targetKey === "Storage type") { //$NON-NLS-1$ //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.keyword.operator.color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -427,12 +446,13 @@ define([
                                 }
                             }
                         }
-                        else if (target[k].trim() === "Function" || target[k].trim() === "Entity" || target[k].trim() === "Function name") { //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+                        else if (targetKey === "Function" || targetKey === "Entity" || targetKey === "Function name") { //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
                             if (restKey[i].dict.key instanceof Array) {
-                                for (l = 0; l< restKey[i].dict.key.length; l++) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
                                     if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
                                         newStyle.styles.entity.name.color = restKey[i].dict.string[l]["#text"];
                                         newStyle.styles.entity.name["function"].color = restKey[i].dict.string[l]["#text"];
+                                        break;
                                     }
                                 }
                             }
@@ -443,11 +463,60 @@ define([
                                 }
                             }
                         }
+                        else if (targetKey === "Markdown Titles" || targetKey === "Headings") { //$NON-NLS-0$
+                            if (restKey[i].dict.key instanceof Array) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
+                                    if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
+                                        newStyle.styles.markup.heading.color = restKey[i].dict.string[l]["#text"];
+                                        break;
+                                    }
+                                }
+                            }
+                            else {
+                                if (restKey[i].dict.key["#text"] === "foreground") { //$NON-NLS-0$
+                                    newStyle.styles.markup.heading.color = restKey[i].dict.string["#text"];
+                                }
+                            }
+                        }
+                        else if (targetKey === "String" || targetKey === "Markdown Raw") { //$NON-NLS-0$
+                            if (restKey[i].dict.key instanceof Array) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
+                                    if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
+                                        newStyle.styles.markup.raw.color = restKey[i].dict.string[l]["#text"];
+                                        break;
+                                    }
+                                }
+                            }
+                            else {
+                                if (restKey[i].dict.key["#text"] === "foreground") { //$NON-NLS-0$
+                                    newStyle.styles.markup.raw.color = restKey[i].dict.string["#text"];
+                                }
+                            }
+                        }
+                        else if (targetKey === "Constants" || targetKey === "Constant") { //$NON-NLS-0$
+                            if (restKey[i].dict.key instanceof Array) {
+                                for (l = 0; l < restKey[i].dict.key.length; l++) {
+                                    if (restKey[i].dict.key[l]["#text"] === "foreground") { //$NON-NLS-0$
+                                        newStyle.styles.markup.other.separator.color = restKey[i].dict.string[l]["#text"];
+                                        break;
+                                    }
+                                }
+                            }
+                            else {
+                                if (restKey[i].dict.key["#text"] === "foreground") { //$NON-NLS-0$
+                                    newStyle.styles.markup.other.separator.color = restKey[i].dict.string["#text"];
+                                }
+                            }
+                        }
 
+                        // Setting the ruler background and color to that of Sublime Text's ruler background and color
                         newStyle.styles.rulerLines.color = "#3d3d3d"; //$NON-NLS-0$
                         newStyle.styles.ruler.annotations.backgroundColor = "#1e1e1e"; //$NON-NLS-0$
                         newStyle.styles.ruler.backgroundColor = "#1e1e1e"; //$NON-NLS-0$
                         newStyle.styles.ruler.overview.backgroundColor = "#1e1e1e"; //$NON-NLS-0$
+
+                        // Calculate luminance for the background color and decide on what background color to use for raw html based on it
+                        newStyle.styles.markup.raw.html.backgroundColor = calculateLuminance(newStyle.styles.backgroundColor) < luminanceDarkLimit ? "#000000" : newStyle.styles.markup.raw.html.backgroundColor; //$NON-NLS-0$
                     }
                 } catch(e) {}
             }
@@ -455,6 +524,19 @@ define([
             return newStyle;
         }
         ThemeImporter.prototype.importSublimeTheme = importSublimeTheme;
+
+        function calculateLuminance(c) {
+            var c = c.substring(1);      // strip #
+            var rgb = parseInt(c, 16);   // convert rrggbb to decimal
+            var r = (rgb >> 16) & 0xff;  // extract red
+            var g = (rgb >>  8) & 0xff;  // extract green
+            var b = (rgb >>  0) & 0xff;  // extract blue
+
+            var luminence = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+
+            return luminence;
+        }
+        ThemeImporter.prototype.calculateLuminance = calculateLuminance;
 
         function importBracketsTheme(rules) {
             var newStyle = themeData.getDefaultTheme();
@@ -477,18 +559,18 @@ define([
                 stringString = "-string",
                 tagString = "-tag";
 
-            var themeName = prompt(messages["nameImportedTheme"], messages["defaultImportedThemeName"]);
-            newStyle.name = themeName;
-            newStyle.className = themeName;
-
-            for (var i = 0; i< rules.length; i++) {
+            for (var i = 0; i < rules.length; i++) {
                 var classes = rules[i].selectorText.split(",");
-                for (var l = 0; l< classes.length; l++) {
-                    try{
+                for (var l = 0; l < classes.length; l++) {
+                    try {
                         classes[l] = classes[l].trim();
 
                         if (classes[l].substr(classes[l].length - scrollString.length) === scrollString) { //$NON-NLS-0$
                             if (rules[i].style.background) {
+                                if (calculateLuminance(colorToHex(rules[i].style.background)) < luminanceDarkLimit) {
+                                    /* use a dark base theme if luminance is low (the theme being imported is dark) */
+                                    newStyle = themeData.getDefaultTheme({dark: true});
+                                }
                                 newStyle.styles.backgroundColor = colorToHex(rules[i].style.background);
                             }
                             if (rules[i].style.color) {
@@ -505,6 +587,9 @@ define([
                                 newStyle.styles.comment.color = colorToHex(rules[i].style.color);
                                 newStyle.styles.comment.block.color = colorToHex(rules[i].style.color);
                                 newStyle.styles.comment.line.color = colorToHex(rules[i].style.color);
+
+                                // Brackets styles raw html in markdown as comments
+                                newStyle.styles.markup.raw.code.color = newStyle.styles.comment.color
                             }
                         }
                         else if (classes[l].substr(classes[l].length - stringString.length) === stringString) { //$NON-NLS-0$
@@ -604,19 +689,23 @@ define([
                                 newStyle.styles.punctuation.block.color = colorToHex(rules[i].style.color);
                             }
                         }
-                    }catch(e) {}
+                    } catch(e) {}
                 }
             }
+
+            // Ask the user to name the theme since css files contain no theme name information
+            var themeName = prompt(messages["nameImportedTheme"], messages["defaultImportedThemeName"]);
+            newStyle.name = themeName;
+            newStyle.className = themeName;
 
             return newStyle;
         }
         ThemeImporter.prototype.importBracketsTheme = importBracketsTheme;
 
         function importEclipseTheme(xml) {
-            var newStyle = themeData.getDefaultTheme();
-
-            newStyle.name = xml.getElementsByTagName("colorTheme")[0].attributes[1].value;
-            newStyle.className = xml.getElementsByTagName("colorTheme")[0].attributes[1].value;
+        	/* use a dark base theme if luminance is low (the theme being imported is dark) */
+        	var useDarkBase = calculateLuminance(getValuesFromXML(xml, "background")) < luminanceDarkLimit;
+            var newStyle = themeData.getDefaultTheme({dark: useDarkBase});
 
             var styles = newStyle.styles;
 
@@ -701,14 +790,17 @@ define([
             styles.textviewLeftRuler.borderColor = styles.rulerLines.color;
             styles.textviewRightRuler.borderColor = styles.rulerLines.color;
 
+            // Get the theme name
+            newStyle.name = xml.getElementsByTagName("colorTheme")[0].attributes[1].value;
+            newStyle.className = xml.getElementsByTagName("colorTheme")[0].attributes[1].value;
+
             return newStyle;
         }
         ThemeImporter.prototype.importEclipseTheme = importEclipseTheme;
 
         function importTheme(data, styles) {
             var body = styles;
-            var rules = "",
-                newStyle = "";
+            var rules = "", newStyle = "";
             var xml = parseToXML(body);
             if (!xml) {
                 rules = rulesForCssText(body);

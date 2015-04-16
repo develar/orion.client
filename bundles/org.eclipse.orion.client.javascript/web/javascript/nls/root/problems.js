@@ -16,6 +16,7 @@ define({
 	'curly': 'Statement should be enclosed in braces.',  //$NON-NLS-0$  //$NON-NLS-1$
 	'eqeqeq' : 'Expected \'${0}\' and instead saw \'${1}\'.',  //$NON-NLS-0$  //$NON-NLS-1$
 	'missing-doc' : 'Missing documentation for function \'${0}\'.',  //$NON-NLS-0$  //$NON-NLS-1$
+	'missing-nls' : 'Non-externalized string literal \'${0}\'.', //$NON-NLS-0$  //$NON-NLS-1$
 	'new-parens' : 'Missing parentheses invoking constructor.', //$NON-NLS-0$  //$NON-NLS-1$
 	'no-caller': '\'arguments.${0}\' is deprecated.', //$NON-NLS-0$  //$NON-NLS-1$
 	'no-comma-dangle': 'Trailing commas in object expressions are discouraged.',  //$NON-NLS-0$ //$NON-NLS-1$
