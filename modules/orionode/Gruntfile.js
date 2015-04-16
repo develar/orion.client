@@ -150,7 +150,12 @@ module.exports = function(grunt) {
 	// Dynamic configuration
 	grunt.config("requirejs.compile.options", util.mixin(grunt.config("nodeBuildConfig"), {
 		optimize: "uglify2",
-		generateSourceMaps: false, // Turn off source maps to reduce download size
+		uglify: {
+			options: {
+				mangle: false
+			}
+		},
+		generateSourceMaps: true, // Turn off source maps to reduce download size
 		appDir: staging,
 		baseUrl: "./",
 		dir: optimized // TODO <% optimized %> ?
