@@ -251,65 +251,48 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 	
 	function UserPreferencesProvider(serviceRegistry) {
 		this._currentPromises = {};
-		this._cache = new Cache("/orion/preferences/user", 60*60); //$NON-NLS-0$
-		
+
 		this._service = null;
 		this.available = function() {
-			if (!this._service) {
+			if (this._service == null) {
 				var references = serviceRegistry.getServiceReferences("orion.core.preference.provider"); //$NON-NLS-0$
 				if (references.length > 0) {
 					this._service = serviceRegistry.getService(references[0]);
 				}
 			}
-			return !!this._service;
+			return this._service != null;
 		};
 	}
 	
 	UserPreferencesProvider.prototype = {	
 		get: function(name, optForce) {
-			if (this._currentPromises[name]) {
+			if (this._currentPromises[name] != null) {
 				return this._currentPromises[name];
 			}
 			var d = new Deferred();
-			var cached = null;
-			if (optForce) {
-				this._cache.remove(name);
-			} else {
-				cached = this._cache.get(name);
-			}
-			if (cached !== null) {
-				d.resolve(cached);
-			} else {
-				this._currentPromises[name] = d;
-				var that = this;
-				this._service.get(name).then(function(data) {
-					that._cache.set(name, data);
-					delete that._currentPromises[name];
+			this._currentPromises[name] = d;
+			var that = this;
+			this._service.get(name).then(function (data) {
+				delete that._currentPromises[name];
+				d.resolve(data);
+			}, function (error) {
+				delete that._currentPromises[name];
+				if (error.status === 404) {
+					var data = {};
 					d.resolve(data);
-				}, function (error) {
-					if (error.status === 404) {
-						var data = {};
-						that._cache.set(name, data);
-						delete that._currentPromises[name];
-						d.resolve(data);
-					} else  {
-						delete that._currentPromises[name];
-						d.resolve(that._cache.get(name, true) || {});
-					}
-				});
-			}
+				}
+				else {
+					d.reject(error)
+				}
+			});
 			return d;
 		},
 		
 		put: function(name, data) {
-			this._cache.set(name, data);
 			return this._service.put(name, data);
 		},
 		
 		remove: function(name, key){
-			var cached = this._cache.get(name);
-			delete cached[key];
-			this._cache.set(name, cached);
 			return this._service.remove(name, key);
 		}
 	};
@@ -317,31 +300,33 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 	function DefaultPreferencesProvider(location) {
 		this._location = location;
 		this._currentPromise = null;
-		this._cache = new Cache("/orion/preferences/default", 60*60); //$NON-NLS-0$
+		this._cache = null;
 	}
 	
 	DefaultPreferencesProvider.prototype = {
-		
 		get: function(name, optForce) {
 			var cached = null;
 			var that = this;
-			if (this._currentPromise) {
+			if (this._currentPromise != null) {
 				return this._currentPromise.then(function() {
-					cached = that._cache.get(name);
-					if (cached === null) {
+					cached = that._cache[name];
+					if (cached == null) {
 						cached = {};
-						that._cache.set(name, cached);
+						that._cache[name] = cached;
 					}
 					return cached;
 				});
 			}
 			var d = new Deferred();
-			if (optForce) {
-				this._cache.remove(name);
-			} else {
-				cached = this._cache.get(name);
+			if (this._cache != null) {
+				if (optForce) {
+					delete this._cache[name];
+				}
+				else {
+					cached = this._cache[name];
+				}
 			}
-			if (cached !== null) {
+			if (cached != null) {
 				d.resolve(cached);
 			} else {
 				this._currentPromise = d;
@@ -351,26 +336,23 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 					},
 					timeout: 15000
 				}).then(function(result) {
-					var data = JSON.parse(result.response);
-					Object.keys(data).forEach(function(key) {
-						that._cache.set(key, data[key] || {});
-					});
-					cached = data[name];
-					if (!cached) {
+					that._cache = JSON.parse(result.response);
+					cached = that._cache[name];
+					if (cached == null) {
 						cached = {};
-						that._cache.set(name, cached);						
+						that._cache[name] = cached;
 					}
 					that._currentPromise = null;
 					d.resolve(cached);
 				}, function(error) {
 					if (error.xhr.status === 401 || error.xhr.status === 404 ) {
-						that._cache.set(name, {});
+						that._cache[name] = {};
 						that._currentPromise = null;
 						d.resolve({});
 					} else {
 						that._currentPromise = null;
-						var data = that._cache.get(name, true);
-						if (data !== null) {
+						var data = that._cache[name];
+						if (data != null) {
 							d.resolve(data[name] || {});
 						} else {
 							d.resolve({});
