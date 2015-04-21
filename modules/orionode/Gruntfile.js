@@ -148,12 +148,12 @@ module.exports = function(grunt) {
 	});
 
 	// Dynamic configuration
+	// see https://github.com/jrburke/r.js/blob/master/build/example.build.js
 	grunt.config("requirejs.compile.options", util.mixin(grunt.config("nodeBuildConfig"), {
 		optimize: "uglify2",
-		uglify: {
-			options: {
-				mangle: false
-			}
+		uglify2: {
+			beautify: true,
+			mangle: false
 		},
 		generateSourceMaps: true, // Turn off source maps to reduce download size
 		appDir: staging,
