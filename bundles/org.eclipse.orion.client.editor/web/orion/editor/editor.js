@@ -1076,6 +1076,7 @@ define("orion/editor/editor", [ //$NON-NLS-0$
 				for (var i = 0; i < annotations.length; i++) {
 					annotation = annotations[i];
 					if (!annotation) { continue; }
+          var rangeStyle = annotation.rangeStyle;
 					if (createAnnotation) {
 						annotation = createAnnotation(annotation);
 					} else {
@@ -1107,6 +1108,10 @@ define("orion/editor/editor", [ //$NON-NLS-0$
 					if(annotations[i].data) {
 						annotation.data = annotations[i].data;
 					}
+          if(rangeStyle != null) {
+						annotation.rangeStyle = rangeStyle;
+					}
+
 					annotation.creatorID = this;
 					add.push(annotation);
 
