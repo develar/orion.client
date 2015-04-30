@@ -274,7 +274,7 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 			var that = this;
 			this._service.get(name).then(function (data) {
 				delete that._currentPromises[name];
-				d.resolve(data);
+				d.resolve(data == null ? {} : data);
 			}, function (error) {
 				delete that._currentPromises[name];
 				if (error.status === 404) {
@@ -380,20 +380,12 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 	
 	LocalPreferencesProvider.prototype = {
 		get: function(name) {
-			var d = new Deferred();
 			var cached = this._cache.get(name);
-			if (cached !== null) {
-				d.resolve(cached);
-			} else {
-				d.resolve({});
-			}
-			return d;
+      return new Deferred().resolve(cached == null ? {} : cached);
 		},
 		put: function(name, data) {
-			var d = new Deferred();
 			this._cache.set(name, data);
-			d.resolve();
-			return d;
+			return new Deferred().resolve();
 		},
 		remove: function(name, key){
 			var cached = this._cache.get(name);
