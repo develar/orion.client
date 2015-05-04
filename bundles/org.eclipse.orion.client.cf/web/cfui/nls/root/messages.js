@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @license
- * Copyright (c) 2013 IBM Corporation and others.
+ * Copyright (c) 2013, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials are made 
  * available under the terms of the Eclipse Public License v1.0 
  * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
@@ -60,6 +60,7 @@ define({//Default message bundle
 	"cloudApplications": "Cloud Applications",
 	"loggingInToCloudFoundry": "Logging in to Cloud Foundry",
 	"checkingForCloudFoundrySettings": "Checking for Cloud Foundry settings",
+	"region:": "Region:",
 	"organization:": "Organization:",
 	"space:": "Space:",
 	"applications": "Applications",
@@ -210,4 +211,5 @@ define({//Default message bundle
 	"createNew": "Create New",
 	"manifestOverride": "Yellow boxes indicate modified fields, which will override manifest file settings.",
 	"noManifest": "No manifest found at /manifest.yml",
+	"refreshLogsPage": "[ Refresh the page to get the latest logs... ]"
 });

@@ -130,9 +130,9 @@
 	margin-left: 15px;
 	margin-right:5px;
 	margin-top: 0;
-	flex: 0 0 main-size;
-	-ms-flex: 0 0 main-size;
-	-webkit-flex: 0 0 main-size;
+	flex: 0 0 auto;
+	-ms-flex: 0 0 auto;
+	-webkit-flex: 0 0 auto;
 }
 
 .sidebar .sectionWrapper.sectionOpened {
@@ -262,9 +262,9 @@
 	margin-left: 0;
 	margin-right: 0;
 	margin-top: 0;
-	flex: 0 0 main-size;
-	-ms-flex: 0 0 main-size;
-	-webkit-flex: 0 0 main-size;
+	flex: 0 0 auto;
+	-ms-flex: 0 0 auto;
+	-webkit-flex: 0 0 auto;
 	background:white;
 }
 
@@ -348,8 +348,10 @@ table .sectionTable {
 }
 
 .gitChangeListCheckLabel {
-	padding-right: 10px;
+	display: inline-block;
 	font-size: 12px;
+	margin-top: 10px;
+	padding-right: 10px;
 }
 
 .gitChangeListInput {
@@ -358,7 +360,21 @@ table .sectionTable {
 }
 
 .gitChangeListCheck {
-	margin-top: 10px;
+	margin: 0 3px 0 0;
+	padding: 0;
+	vertical-align: text-top;
+}
+
+#persitCheck.gitChangeListCheck {
+	margin-left: 10px; /*  We only need margin on the left for the Save checkbox */
+}
+
+#persitCheck.gitChangeListCheck ~ label {
+	margin-top: 0;
+}
+
+_:-moz-tree-row(hover), .gitChangeListCheck { /* Firefox  HACK */
+	vertical-align: text-bottom;
 }
 
 .gitChangeListGroup {
@@ -399,7 +415,7 @@ table .sectionTable {
 	background-color: #FFF;
 	padding: 5px;
 	padding-bottom: 0;
-	margin: 10px;
+	margin: 10px 10px 10px 4px;
 	margin-bottom: 0;
 	border-radius: 5px;
 	border: 1px solid #b2cfb9;
@@ -430,7 +446,7 @@ table .sectionTable {
 .gitCommitMessage .gitCommitMessageBottomRow {
 	width: calc(100% - 20px);
 	padding: 2px;
-	margin-left: 10px;
+	margin-left: 4px;
 	margin-right: 10px;
 	overflow: hidden;
 }
@@ -452,8 +468,7 @@ table .sectionTable {
 	border: none;
 	background: transparent;
 	font-weight: bold;
-	margin-top: 5px;
-	margin-right: 5px;
+	margin-top: 10px;
 	color: #FF4500;
 	cursor: pointer;
 }
@@ -493,6 +508,12 @@ table .sectionTable {
 	background-color: #f4f4f4;
 }
 
+#commitsNodeOutgoing .gitListCell,
+#commitsNodeIncoming .gitListCell,
+#commitsNodeSynchronized .gitListCell {
+	line-height: 11px;
+}
+
 .gitListCell {
 	padding-top: 6px;
 	padding-bottom: 4px;
@@ -503,7 +524,7 @@ table .sectionTable {
 	font-weight: bold;
 	font-size: 8pt;
 	text-transform: uppercase;
-	margin-top: 4px;
+	margin-top: 6px;
 }
 
 .gitCommitSectionTableItem {

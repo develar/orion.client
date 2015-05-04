@@ -15,30 +15,34 @@ define([
 ], function() {
    
    /**
-    * @description Computes the declaration for the given arguments
+    * @description Computes the definition for the given arguments
     * @param {Object} ternserver The server to query
-    * @param {Function} postMessage The callback to post back from the worker
     * @param {Object} args The arguments
+    * @param {Function} callback The callback to call once the request completes or fails
     * @since 9.0
     */
-   function computeDeclaration(ternserver, postMessage, args) {
+   function computeDeclaration(ternserver, args, callback) {
        if(ternserver) {
 	       ternserver.request({
 	           query: {
 		           type: "definition", 
 		           file: args.meta.location,
-		           end: args.params.offset,
-	           }}, 
+		           end: args.params.offset
+	           },
+	           files: args.files}, 
 	           function(error, decl) {
 	               if(error) {
-	                   postMessage({error: error.message, message: 'Failed to compute declaration'});
+	                   callback({request: 'definition', error: error.message, message: 'Failed to compute declaration'});
 	               }
-	               if(Array.isArray(decl)) {
-        			   postMessage({request: 'decl', decl:decl});
-	               }
+	               if(decl && typeof(decl.start) === 'number' && typeof(decl.end) === "number" &&
+	               		decl.file === args.meta.location) { //TODO only work on local decls
+       			   		callback({request: 'definition', declaration:decl});
+       			   } else {
+       			   		callback({request: 'definition', declaration: null});
+       			   }
 	           });
 	   } else {
-	       postMessage({message: 'failed to compute declaration, server not started'});
+	       callback({request: 'definition', message: 'Failed to compute declaration, server not started'});
 	   }
    }
    

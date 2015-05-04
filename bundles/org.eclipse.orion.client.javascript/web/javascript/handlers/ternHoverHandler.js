@@ -16,28 +16,30 @@ define([
     /**
      * @description Compute the hover for the given arguments
      * @param {Object} ternserver The server to query
-     * @param {Function} postMessage The callback to post back from the worker
      * @param {Object} args The arguments
+     * @param {Function} callback The callback to call once the request completes or fails
      * @since 9.0
      */
-    function computeHover(ternserver, postMessage, args) {
+    function computeHover(ternserver, args, callback) {
         if(ternserver) {
 	       ternserver.request({
 	           query: {
 		           type: "documentation", 
 		           file: args.meta.location,
-		           end: args.params.offset,
-	           }}, 
+		           end: args.params.offset
+	           },
+	           files: args.files}, 
 	           function(error, doc) {
 	               if(error) {
-	                   postMessage({error: error.message, message: 'Failed to compute documentation'});
-	               }
-	               if(Array.isArray(doc)) {
-        			   postMessage({request: 'hover', doc:doc});
+	                   callback({request: 'documentation', error: error.message, message: 'Failed to compute documentation'});
+	               } else if(doc && doc.doc) {
+        			   callback({request: 'documentation', doc:doc});
+	               } else {
+						callback({request: 'documentation', doc: null});
 	               }
 	           });
 	   } else {
-	       postMessage({message: 'failed to compute documentation, server not started'});
+	       callback({request: 'documentation', message: 'Failed to compute documentation, server not started'});
 	   }
     }
     

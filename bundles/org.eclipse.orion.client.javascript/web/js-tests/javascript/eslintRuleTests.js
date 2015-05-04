@@ -2969,6 +2969,15 @@ define([
     			var messages = eslint.verify(topic, config);
     			assert.equal(messages.length, 0);
     		});
+    		it("Ignore define values like messages bundles", function() {
+    			var topic = "define({'a': 'b', 'c': 'd'})";
+    	
+    			var config = { rules: {} };
+    			config.rules[RULE_ID] = 1;
+    	
+    			var messages = eslint.verify(topic, config);
+    			assert.equal(messages.length, 0);
+    		});
     		it("Ignore member expression keys", function() {
     			var topic = "i18n.replace(messages['nlsKey'], 'a');";
     	
@@ -3011,7 +3020,22 @@ define([
     			assert.equal(messages[0].message, "Non-externalized string literal 'b'.");
     			assert.equal(messages[0].node.type, "Literal");
     		});
-    		it("Ignore binary comparisons", function() {
+    		it("Ignore binary comparisons but not concatenate", function() {
+    			var topic = "var a = ('a' + 'b') === 'c';";
+    	
+    			var config = { rules: {} };
+    			config.rules[RULE_ID] = 1;
+    	
+    			var messages = eslint.verify(topic, config);
+    			assert.equal(messages.length, 2);
+    			assert.equal(messages[0].ruleId, RULE_ID);
+    			assert.equal(messages[0].message, "Non-externalized string literal 'a'.");
+    			assert.equal(messages[0].node.type, "Literal");
+    			assert.equal(messages[1].ruleId, RULE_ID);
+    			assert.equal(messages[1].message, "Non-externalized string literal 'b'.");
+    			assert.equal(messages[1].node.type, "Literal");
+    		});
+    		it("Ignore object keys", function() {
     			var topic = "var a = {'a':'b'};";
     	
     			var config = { rules: {} };

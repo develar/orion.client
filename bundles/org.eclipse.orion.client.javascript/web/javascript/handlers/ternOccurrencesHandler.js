@@ -16,31 +16,31 @@ define([
     /**
      * @description Compute the occurrences 
      * @param {Object} ternserver The server to query
-     * @param {Function} postMessage The callback postMessage to communicate back fro the worker 
      * @param {Object} args The arguments
+     * @param {Function} callback The callback to call once the request completes or fails
      * @since 9.0
      */
-    function computeOccurrences(ternserver, postMessage, args) {
+    function computeOccurrences(ternserver, args, callback) {
         if(ternserver) {
 	       ternserver.request({
 	           query: {
 		           type: "refs", 
 		           file: args.meta.location,
-		           end: args.params.selection.start,
+		           end: args.params.selection.start
 	           }}, 
 	           function(error, refs) {
 	               if(error) {
-	                   postMessage({error: error.message, message: 'Failed to compute occurrences'});
-	               }
-	               if(Array.isArray(refs)) {
-        			   postMessage({request: 'occurrences', refs:refs});
+	                   callback({request: 'occurrences', error: error.message, message: 'Failed to compute occurrences'});
+	               } else if(refs && Array.isArray(refs)) {
+        			   callback({request: 'occurrences', refs:refs});
+	               } else {
+	               		callback({request: 'occurrences', refs:[]});
 	               }
 	           });
 	   } else {
-	       postMessage({message: 'failed to compute occurrences, server not started'});
+	       callback({request: 'occurrences', message: 'failed to compute occurrences, server not started'});
 	   }
     }
-    
     
     return {
         computeOccurrences: computeOccurrences

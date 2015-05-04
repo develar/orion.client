@@ -572,16 +572,18 @@ define([
 	function generateBanner(parentId, serviceRegistry, commandRegistry, prefsService, searcher, handler, /* optional */ editor, closeSplitter, fileClient) {
 		mMetrics.initFromRegistry(serviceRegistry);
 		prefsService.addChangeListener(function(name, value) {
-			if (value.length < METRICS_MAXLENGTH) {
+			if (value.length < METRICS_MAXLENGTH && name.indexOf("/git/credentials/")) { //$NON-NLS-0$
 				mMetrics.logEvent("preferenceChange", name, value); //$NON-NLS-0$
 			}
 		});
 		window.addEventListener("error", function(e) { //$NON-NLS-0$
 			var index = e.filename.lastIndexOf("/"); //$NON-NLS-0$
-			var errorString = e.message + " (" + e.filename.substring(index + 1) + ": " + e.lineno + (e.colno ? ", " + e.colno : "") + ")"; //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			var errorString = e.message + " (" + (e.filename.substring(index + 1) || "<unknown>") + ": " + e.lineno + (e.colno ? ", " + e.colno : "") + ")"; //$NON-NLS-4$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 			mMetrics.logEvent("runtime", "uncaughtError", errorString); //$NON-NLS-1$ //$NON-NLS-0$
-			var stackString = e.error.stack.replace(new RegExp(window.location.origin, "g"), ""); //$NON-NLS-0$
-			mMetrics.logEvent("runtime", "uncaughtErrorStack", stackString); //$NON-NLS-1$ //$NON-NLS-0$
+			if (e.error) {
+				var stackString = e.error.stack.replace(new RegExp(window.location.origin, "g"), ""); //$NON-NLS-0$
+				mMetrics.logEvent("runtime", "uncaughtErrorStack", stackString); //$NON-NLS-1$ //$NON-NLS-0$
+			}
 		});
 
 		new mThemePreferences.ThemePreferences(prefsService, new mThemeData.ThemeData()).apply();
