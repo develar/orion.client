@@ -13,6 +13,14 @@
 
 /*eslint-env browser, amd*/
 define("orion/keyBinding", ['orion/util'], function(util) { //$NON-NLS-1$ //$NON-NLS-0$
+  var FLAG_CONTROL = 1;
+  var FLAG_META = 2;
+  var FLAG_SHIFT = 4;
+  var FLAG_ALT = 8;
+
+  function checkFlag(flags, mask, value) {
+    return ((flags & mask) === mask) === value;
+  }
 
     /**
 	 * @class A KeyBinding is an interface used to define keyboard shortcuts.
@@ -49,11 +57,44 @@ define("orion/keyBinding", ['orion/util'], function(util) { //$NON-NLS-1$ //$NON
 	 */
 	function KeyStroke (keyCode, mod1, mod2, mod3, mod4, type) {
 		this.type = type || "keydown"; //$NON-NLS-0$
-		if (typeof(keyCode) === "string" && this.type === "keydown") { //$NON-NLS-1$ //$NON-NLS-0$
-			this.keyCode = keyCode.toUpperCase().charCodeAt(0);
+
+    var flags = -1
+
+    if (typeof(keyCode) === "string" && this.type === "keydown") { //$NON-NLS-1$ //$NON-NLS-0$
+      if (keyCode.length > 2) {
+        flags = 0
+        var data = keyCode.split(" ")
+        for (var i = 0; i < data.length; i++) {
+          var k = data[i]
+          if (k == "control") {
+            flags |= FLAG_CONTROL;
+          }
+          else if (k == "meta") {
+            flags |= FLAG_META;
+          }
+          else if (k == "shift") {
+            flags |= FLAG_SHIFT;
+          }
+          else if (k == "alt") {
+            flags |= FLAG_ALT;
+          }
+          else {
+            if (k.length !== 1) {
+              throw new Error("Invalid key, expected one char: ", k)
+            }
+            this.keyCode = k.toUpperCase().charCodeAt(0);
+          }
+        }
+      }
+      else {
+        this.keyCode = keyCode.toUpperCase().charCodeAt(0);
+      }
 		} else {
 			this.keyCode = keyCode;
 		}
+
+    this.flags = flags
+
 		this.mod1 = mod1 !== undefined && mod1 !== null ? mod1 : false;
 		this.mod2 = mod2 !== undefined && mod2 !== null ? mod2 : false;
 		this.mod3 = mod3 !== undefined && mod3 !== null ? mod3 : false;
@@ -91,20 +132,26 @@ define("orion/keyBinding", ['orion/util'], function(util) { //$NON-NLS-1$ //$NON
 					e = e[0];
 				}
 			}
-			if (e.type !== this.type) {
-				return false;
-			}
-			if (this.keyCode === e.keyCode || this.keyCode === String.fromCharCode(util.isOpera ? e.which : (e.charCode !== undefined ? e.charCode : e.keyCode))) {
-				var mod1 = util.isMac ? e.metaKey : e.ctrlKey;
-				if (this.mod1 !== mod1) { return false; }
-				if (this.type === "keydown") { //$NON-NLS-0$
-					if (this.mod2 !== e.shiftKey) { return false; }
-				}
-				if (this.mod3 !== e.altKey) { return false; }
-				if (util.isMac && this.mod4 !== e.ctrlKey) { return false; }
-				return true;
-			}
-			return false;
+			if (e.type !== this.type || !(this.keyCode === e.keyCode || this.keyCode === String.fromCharCode(util.isOpera ? e.which : (e.charCode !== undefined ? e.charCode : e.keyCode)))) {
+        return false
+      }
+
+      var flags = this.flags;
+      if (flags != -1) {
+        return checkFlag(flags, FLAG_CONTROL, e.ctrlKey) &&
+               checkFlag(flags, FLAG_META, e.metaKey) &&
+               checkFlag(flags, FLAG_SHIFT, e.shiftKey) &&
+               checkFlag(flags, FLAG_ALT, e.altKey);
+      }
+
+      var mod1 = util.isMac ? e.metaKey : e.ctrlKey;
+      if (this.mod1 !== mod1) { return false; }
+      if (this.type === "keydown") { //$NON-NLS-0$
+        if (this.mod2 !== e.shiftKey) { return false; }
+      }
+      if (this.mod3 !== e.altKey) { return false; }
+      if (util.isMac && this.mod4 !== e.ctrlKey) { return false; }
+      return true;
 		},
 		/**
 		 * Returns whether this key stroke is the same as the given parameter.
