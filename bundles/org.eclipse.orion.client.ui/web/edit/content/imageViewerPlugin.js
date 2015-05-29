@@ -9,6 +9,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+require("./imageViewerPlugin.css")
+
 /*eslint-env browser, amd*/
 /*global URL*/
 define([

@@ -9,8 +9,8 @@
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 /*eslint-env browser, amd*/
-define(['i18n!orion/operations/nls/messages', 'require', 'orion/webui/littlelib', 'orion/webui/popupdialog', 'orion/operationsCommands'],
-function(messages, require, lib, popupdialog, mOperationsCommands) {
+define(['i18n!orion/operations/nls/messages', 'orion/webui/littlelib', 'orion/webui/popupdialog', 'orion/operationsCommands'],
+function(messages, lib, popupdialog, mOperationsCommands) {
 	
 	/**
 	 * Usage: <code>new OperationsDialog(options).show();</code>
@@ -47,7 +47,7 @@ function(messages, require, lib, popupdialog, mOperationsCommands) {
 	};
 	
 	OperationsDialog.prototype._bindToDom = function(parent) {
-		this.$allOperationsLink.href = require.toUrl("operations/list.html"); //$NON-NLS-0$
+		this.$allOperationsLink.href = "/operations/list.html"; //$NON-NLS-0$
 		this._setOperationsVisibility();
 	};
 

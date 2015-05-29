@@ -11,7 +11,6 @@
 
 /*eslint-env browser, amd*/
 define([
-	'require',
 	'orion/commands',
 	'orion/webui/littlelib',
 	'orion/webui/tooltip'
@@ -64,7 +63,7 @@ define([
 		*/
 		error: function(err){
 			var indicator = lib.node(this._prefix+this._id);
-			indicator.src = require.toUrl("images/problem.gif");
+			indicator.src = "/images/problem.gif";
 			indicator.className = "";
 			
 			new mTooltip.Tooltip({
@@ -127,7 +126,7 @@ define([
 			indicator.parentNode.removeChild(indicator);
 			
 			var image = document.createElement("img");
-			image.src = require.toUrl("images/problem.gif");
+			image.src = "/images/problem.gif";
 			this._anchor.appendChild(image);
 			
 			new mTooltip.Tooltip({

@@ -11,7 +11,7 @@
  *******************************************************************************/
 /*eslint-env browser, amd*/
 define([
-		'i18n!orion/nls/messages', 'require', 'orion/commonHTMLFragments', 'orion/keyBinding', 'orion/EventTarget', 'orion/commands',
+		'i18n!orion/nls/messages', 'orion/commonHTMLFragments', 'orion/keyBinding', 'orion/EventTarget', 'orion/commands',
 		'orion/parameterCollectors', 'orion/extensionCommands', 'orion/breadcrumbs', 'orion/webui/littlelib', 'orion/i18nUtil',
 		'orion/webui/splitter', 'orion/webui/dropdown', 'orion/webui/tooltip', 'orion/contentTypes', 'orion/keyAssist',
 		'orion/widgets/themes/ThemePreferences', 'orion/widgets/themes/container/ThemeData', 'orion/Deferred',
@@ -19,7 +19,7 @@ define([
 		'text!orion/banner/toolbar.html',
 		'orion/util', 'orion/customGlobalCommands', 'orion/fileClient', 'orion/webui/SideMenu', 'orion/objects', "orion/metrics"
 	],
-	function (messages, require, commonHTML, KeyBinding, EventTarget, mCommands, mParameterCollectors, mExtensionCommands,
+	function (messages, commonHTML, KeyBinding, EventTarget, mCommands, mParameterCollectors, mExtensionCommands,
 		mBreadcrumbs, lib, i18nUtil, mSplitter, mDropdown, mTooltip, mContentTypes, mKeyAssist, mThemePreferences, mThemeData, Deferred,
 		mUserMenu, PageLinks, openResource, BannerTemplate, ToolbarTemplate, util, mCustomGlobalCommands, mFileClient, SideMenu, objects, mMetrics) {
 	/**
@@ -608,7 +608,7 @@ define([
 		// TODO not entirely happy with this. Dynamic behavior that couldn't be in the html template, maybe it could be
 		// dynamically bound in a better way like we do with NLS strings
 		var home = lib.node("home"); //$NON-NLS-0$
-		home.href = require.toUrl("edit/edit.html"); //$NON-NLS-0$
+		home.href = "/edit/edit.html"; //$NON-NLS-0$
 		home.setAttribute("aria-label", messages['Orion Home']); //$NON-NLS-1$ //$NON-NLS-0$
 		var progressPane = lib.node("progressPane"); //$NON-NLS-0$
 		progressPane.src = mCommands.NO_IMAGE;
@@ -778,7 +778,7 @@ define([
 				tooltip: messages["System Config Tooltip"],
 				id: "orion.configDetailsPage", //$NON-NLS-0$
 				hrefCallback: function () {
-					return require.toUrl("about/about.html"); //$NON-NLS-0$
+					return "/about/about.html"; //$NON-NLS-0$
 				}
 			});
 
@@ -791,7 +791,7 @@ define([
 				tooltip: messages["Background Operations Tooltip"],
 				id: "orion.backgroundOperations", //$NON-NLS-0$
 				hrefCallback: function () {
-					return require.toUrl("operations/list.html"); //$NON-NLS-0$
+					return "/operations/list.html"; //$NON-NLS-0$
 				}
 			});
 

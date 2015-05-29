@@ -11,7 +11,7 @@
  *******************************************************************************/
 /*eslint-env browser, amd*/
 
-define(['require', 'orion/Deferred', 'orion/serviceregistry', 'orion/preferences', 'orion/pluginregistry', 'orion/config'], function(require, Deferred, mServiceregistry, mPreferences, mPluginRegistry, mConfig) {
+define(['orion/Deferred', 'orion/serviceregistry', 'orion/preferences', 'orion/pluginregistry', 'orion/config'], function(Deferred, mServiceregistry, mPreferences, mPluginRegistry, mConfig) {
 
 	var once; // Deferred
 
@@ -30,7 +30,7 @@ define(['require', 'orion/Deferred', 'orion/serviceregistry', 'orion/preferences
 		return preferences.getPreferences("/plugins").then(function(pluginsPreference) { //$NON-NLS-0$
 			var configuration = {plugins:{}};
 			pluginsPreference.keys().forEach(function(key) {
-				var url = require.toUrl(key);
+				var url = key;
 				configuration.plugins[url] = pluginsPreference[key];
 			});
 			var pluginRegistry = new mPluginRegistry.PluginRegistry(serviceRegistry, configuration);	
@@ -39,7 +39,7 @@ define(['require', 'orion/Deferred', 'orion/serviceregistry', 'orion/preferences
 					return preferences.getPreferences("/plugins", preferences.USER_SCOPE).then(function(pluginsPreference) { //$NON-NLS-0$
 						var installs = [];
 						pluginsPreference.keys().forEach(function(key) {
-							var url = require.toUrl(key);
+							var url = key;
 							if (!pluginRegistry.getPlugin(url)) {
 								installs.push(pluginRegistry.installPlugin(url,{autostart: "lazy"}).then(function(plugin) {
 									return plugin.update().then(function() {
@@ -59,22 +59,16 @@ define(['require', 'orion/Deferred', 'orion/serviceregistry', 'orion/preferences
 				);
 			}).then(function() {
 				var auth = serviceRegistry.getService("orion.core.auth"); //$NON-NLS-0$
-				if (auth) {
-					var authPromise = auth.getUser().then(function(user) {
-						if (!user) {
+				if (auth != null) {
+					return auth.getUser().then(function(user) {
+						if (user == null) {
 							return auth.getAuthForm(window.location.href).then(function(formURL) {
 								setTimeout(function() {
 									window.location = formURL;
 								}, 0);
 							});
-						} else {
-							localStorage.setItem("lastLogin", new Date().getTime()); //$NON-NLS-0$
 						}
 					});
-					var lastLogin = localStorage.getItem("lastLogin");
-					if (!lastLogin || lastLogin < (new Date().getTime() - (15 * 60 * 1000))) { // 15 minutes
-						return authPromise; // if returned waits for auth check before continuing
-					}
 				}
 			}).then(function() {
 				var result = {

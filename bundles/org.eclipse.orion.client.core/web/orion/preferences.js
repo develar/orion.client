@@ -10,7 +10,7 @@
  ******************************************************************************/
 
 /*eslint-env browser, amd*/
-define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(require, Deferred, xhr, mMetrics){
+define(['orion/Deferred', 'orion/xhr'], function(Deferred, xhr){
 
 	/**
 	 * Constructs a new preferences instance. This constructor is not
@@ -409,10 +409,7 @@ define(['require', 'orion/Deferred', 'orion/xhr', 'orion/metrics'], function(req
 		this._localProvider = new LocalPreferencesProvider();
 		this._changeListeners = [];
 
-		defaultPreferencesLocation = defaultPreferencesLocation || "defaults.pref"; //$NON-NLS-0$
-		if (defaultPreferencesLocation.indexOf("://") === -1) { //$NON-NLS-0$
-			defaultPreferencesLocation = require.toUrl(defaultPreferencesLocation);
-		}
+		defaultPreferencesLocation = defaultPreferencesLocation || "/defaults.pref"; //$NON-NLS-0$
 		this._defaultsProvider = new DefaultPreferencesProvider(defaultPreferencesLocation);
 		this._serviceRegistration = serviceRegistry.registerService("orion.core.preference", this); //$NON-NLS-0$
 	}

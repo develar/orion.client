@@ -3,3 +3,10 @@
 .git
 node_modules
 target
+
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/androidapp
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/auth
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/js-tests
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/plugins/samples
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/plugins/languages
+lib/orion.client/bundles/org.eclipse.orion.client.ui/web/shell

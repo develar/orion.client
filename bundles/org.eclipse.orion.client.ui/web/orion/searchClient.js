@@ -12,10 +12,10 @@
  
 /*eslint-env browser, amd*/
 define([
-	'i18n!orion/search/nls/messages', 'require', 'orion/webui/littlelib', 'orion/i18nUtil', 'orion/searchUtils', 'orion/crawler/searchCrawler',
+	'i18n!orion/search/nls/messages', 'orion/webui/littlelib', 'orion/i18nUtil', 'orion/searchUtils', 'orion/crawler/searchCrawler',
 	'orion/explorers/navigatorRenderer', 'orion/extensionCommands', 'orion/uiUtils', 'orion/Deferred'
 	],
-function(messages, require, lib, i18nUtil, mSearchUtils, mSearchCrawler, navigatorRenderer, extensionCommands, mUiUtils, Deferred){
+function(messages, lib, i18nUtil, mSearchUtils, mSearchCrawler, navigatorRenderer, extensionCommands, mUiUtils, Deferred){
 
 	//default search renderer until we factor this out completely
 	function DefaultSearchRenderer(serviceRegistry, commandRegistry) {
@@ -136,7 +136,7 @@ function(messages, require, lib, i18nUtil, mSearchUtils, mSearchCrawler, navigat
 							params.find = searchHelper.inFileQuery.searchStr;
 							params.regEx = searchHelper.inFileQuery.wildCard ? true : undefined;
 						}
-						var resourceLink = navigatorRenderer.createLink(require.toUrl("edit/edit.html"), item, commandRegistry, contentTypeService,
+						var resourceLink = navigatorRenderer.createLink("/edit/edit.html", item, commandRegistry, contentTypeService,
 							openWithCommands, {
 								"aria-describedby": (resource.folderName ? resource.folderName : resource.path).replace(/[^a-zA-Z0-9_\.:\-]/g,''), //$NON-NLS-0$
 								style: {

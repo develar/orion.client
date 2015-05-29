@@ -13,10 +13,9 @@
 /*eslint-env browser, amd*/
 define("orion/editor/textTheme", //$NON-NLS-0$
 [
-	'require', //$NON-NLS-0$
 	'orion/editor/eventTarget', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
-], function(require, mEventTarget, util) {
+], function(mEventTarget, util) {
 	var THEME_PREFIX = "orion-theme-"; //$NON-NLS-0$
 	
 	var Themes = {};
@@ -208,7 +207,7 @@ define("orion/editor/textTheme", //$NON-NLS-0$
 			if (href.substring(href.length - extension.length) !== extension) {
 				href += extension;
 			}
-			if (/^\//.test(href) || /[a-zA-Z0-9]+:\/\//i.test(href) || !require.toUrl /* almond cannot load dynamically */) {
+			if (/^\//.test(href) || /[a-zA-Z0-9]+:\/\//i.test(href)) {
 				this._createStyle(className, href, callback, true);
 			} else {
 				var self = this;

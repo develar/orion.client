@@ -10,14 +10,13 @@
 /*eslint-env browser, amd*/
 /*global URL*/
 define([
-	"require",
 	"orion/Deferred",
 	"orion/PageUtil",
 	"orion/URITemplate",
 	"orion/i18nUtil",
 	"orion/objects",
 	"orion/URL-shim"
-], function(require, Deferred, PageUtil, URITemplate, i18nUtil, objects) {
+], function(Deferred, PageUtil, URITemplate, i18nUtil, objects) {
 
 	/**
 	 * Returns the value of the <code>{OrionHome}</code> variable.
@@ -26,15 +25,7 @@ define([
 	 * @returns {String} The value of the <code>{OrionHome}</code> variable.
 	 */
 	function getOrionHome() {
-		if(!require.toUrl){
 			return new URL("/", window.location.href).href.slice(0, -1);
-		} else {
-			// The idea here is to find the path of `orion/*` modules from the loader, and go up one folder to
-			// the servlet context path. Finally, return a complete URL, slicing off the trailing `/`.
-			// RequireJS 2.1.15:
-			var orionSrcURL = new URL(require.toUrl("orion/"), window.location.href); //$NON-NLS-0$
-			return new URL("../", orionSrcURL).href.slice(0, -1); //$NON-NLS-0$
-		}
 	}
 
 	/**

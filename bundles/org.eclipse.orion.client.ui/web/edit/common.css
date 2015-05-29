@@ -6,7 +6,7 @@
 
 @import "../css/sections.css"; /* for outliner */
 
-@import "../orion/editor/editor.css";
+@import "../../../org.eclipse.orion.client.editor/web/orion/editor/editor.css";
 
 @import "../orion/webui/Slideout.css";
 

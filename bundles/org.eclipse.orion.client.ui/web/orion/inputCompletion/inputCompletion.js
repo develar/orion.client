@@ -268,7 +268,7 @@ define(['orion/EventTarget'], function( EventTarget){
 	
 	InputCompletion.prototype._createProposalLink = function(name, href, boldIndex, boldLength) {
 		var link = document.createElement("a"); //$NON-NLS-0$
-		link.href = require.toUrl(href);
+		link.href = href;
 		link.appendChild(this._createBoldText(name, boldIndex, boldLength));
 		return link;
 	};

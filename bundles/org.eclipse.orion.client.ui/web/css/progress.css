@@ -248,7 +248,7 @@
 
 .progressPane_finished_dialog {
 	vertical-align: middle;
-	background: url(../images/none.png) no-repeat center;  
+	/*background: url(../images/none.png) no-repeat center;  */
 	width: 16px; height: 16px;
 }
 

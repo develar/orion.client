@@ -11,8 +11,8 @@
  *     Andy Clement (vmware) - bug 344614
  *******************************************************************************/
 /*eslint-env browser, amd*/
-define(['i18n!orion/widgets/nls/messages', 'orion/crawler/searchCrawler', 'orion/contentTypes', 'require', 'orion/webui/littlelib', 'orion/util', 'orion/webui/dialog', 'orion/Deferred'], 
-		function(messages, mSearchCrawler, mContentTypes, require, lib, util, dialog, Deferred) {
+define(['i18n!orion/widgets/nls/messages', 'orion/crawler/searchCrawler', 'orion/contentTypes', 'orion/webui/littlelib', 'orion/util', 'orion/webui/dialog', 'orion/Deferred'],
+		function(messages, mSearchCrawler, mContentTypes, lib, util, dialog, Deferred) {
 	/**
 	 * Usage: <code>new OpenResourceDialog(options).show();</code>
 	 * 
@@ -33,7 +33,7 @@ define(['i18n!orion/widgets/nls/messages', 'orion/crawler/searchCrawler', 'orion
 		'<div role="search">' + //$NON-NLS-0$
 			'<div><label id="fileNameMessage" for="fileName">${Type the name of a file to open (? = any character, * = any string):}</label></div>' + //$NON-NLS-0$
 			'<div><input id="fileName" type="text" class="openResourceDialogInput" style="min-width: 25em; width:90%;"/></div>' + //$NON-NLS-0$
-			'<div id="progress" style="padding: 2px 0 0; width: 100%;"><img src="'+ require.toUrl("../../../images/progress_running.gif") + '" class="progressPane_running_dialog" id="crawlingProgress"></img></div>' +  //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			'<div id="progress" style="padding: 2px 0 0; width: 100%;"><img src="'+ ("../../../images/progress_running.gif") + '" class="progressPane_running_dialog" id="crawlingProgress"></img></div>' +  //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 			'<div id="results" style="max-height:250px; height:auto; overflow-y:auto;" aria-live="off"></div>' + //$NON-NLS-0$
 			'<div id="statusbar"></div>' + //$NON-NLS-0$
 		'</div>'; //$NON-NLS-0$

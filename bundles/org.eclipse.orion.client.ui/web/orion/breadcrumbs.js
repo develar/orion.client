@@ -9,7 +9,7 @@
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 /*eslint-env browser, amd*/
-define(['require', 'orion/webui/littlelib'], function (require, lib) {
+define(['orion/webui/littlelib'], function (lib) {
 
     /**
      * Constructs a new BreadCrumb with the given options.
@@ -62,7 +62,7 @@ define(['require', 'orion/webui/littlelib'], function (require, lib) {
                     if (this._makeHref) {
                         this._makeHref(seg, param );
                     } else {
-                        seg.href = require.toUrl("edit/edit.html") + "#" + param; //$NON-NLS-1$ //$NON-NLS-0$
+                        seg.href = ("/edit/edit.html") + "#" + param; //$NON-NLS-1$ //$NON-NLS-0$
                     }
                 } else {
                     seg = document.createElement('span'); //$NON-NLS-0$
@@ -87,7 +87,7 @@ define(['require', 'orion/webui/littlelib'], function (require, lib) {
             if (this._makeHref) {
                 this._makeHref(seg, section.Location, section);
             } else {
-                seg.href = require.toUrl("edit/edit.html") + "#" + section.ChildrenLocation; //$NON-NLS-1$ //$NON-NLS-0$
+                seg.href = "/edit/edit.html" + "#" + section.ChildrenLocation; //$NON-NLS-1$ //$NON-NLS-0$
             }
         },
 

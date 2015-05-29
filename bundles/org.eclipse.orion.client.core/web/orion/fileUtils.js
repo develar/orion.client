@@ -10,7 +10,7 @@
  *******************************************************************************/
 /*eslint-env browser, amd*/
 /*global URL*/
-define(['require', 'orion/URL-shim'], function(require) {
+define(['orion/URL-shim'], function() {
 
 	var tryParentRelative = true;
 	function makeParentRelative(location) {
@@ -49,12 +49,7 @@ define(['require', 'orion/URL-shim'], function(require) {
 	}
 
 	//cache this
-	var _workspaceUrlHref;
-	if(!require.toUrl){
-		_workspaceUrlHref =(new URL("/", window.location.href)).href;
-	} else {
-		_workspaceUrlHref =(new URL(require.toUrl("workspace"), window.location.href)).href;
-	}
+	var _workspaceUrlHref =(new URL("/", window.location.href)).href;
 	/**
 	 * Determines if the path represents the workspace root
 	 * @name orion.util#isAtRoot

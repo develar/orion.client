@@ -12,12 +12,12 @@
 /*global define document console window*/
 /*eslint forin:true regexp:false sub:true*/
 
-define(['i18n!orion/search/nls/messages', 'require', 'orion/Deferred', 'orion/webui/littlelib', 'orion/contentTypes', 'orion/i18nUtil', 'orion/explorers/explorer', 
+define(['i18n!orion/search/nls/messages', 'orion/Deferred', 'orion/webui/littlelib', 'orion/contentTypes', 'orion/i18nUtil', 'orion/explorers/explorer',
 	'orion/fileClient', 'orion/commands', 'orion/searchUtils', 'orion/compare/compareView', 
 	'orion/highlight', 'orion/webui/tooltip', 'orion/explorers/navigatorRenderer', 'orion/extensionCommands',
 	'orion/searchModel', 'orion/crawler/searchCrawler', 'orion/explorers/fileDetailRenderer'
 ],
-function(messages, require, Deferred, lib, mContentTypes, i18nUtil, mExplorer, mFileClient, mCommands, 
+function(messages, Deferred, lib, mContentTypes, i18nUtil, mExplorer, mFileClient, mCommands,
 	mSearchUtils, mCompareView, mHighlight, mTooltip, 
 	navigatorRenderer, extensionCommands, mSearchModel, mSearchCrawler, mFileDetailRenderer
 ) {
@@ -1063,7 +1063,7 @@ function(messages, require, Deferred, lib, mContentTypes, i18nUtil, mExplorer, m
 						var rootURL = this.fileClient.fileServiceRootURL(loc);
 						path = loc.substring(rootURL.length); //remove file service root from path
 					}
-					resultLocation.push({linkLocation: require.toUrl("edit/edit.html") +"#" + loc, location: loc, path: path, name: hit.Name, lastModified: hit.LastModified}); //$NON-NLS-1$ //$NON-NLS-0$
+					resultLocation.push({linkLocation: "/edit/edit.html" +"#" + loc, location: loc, path: path, name: hit.Name, lastModified: hit.LastModified}); //$NON-NLS-1$ //$NON-NLS-0$
 				}
 			}
 		}
