@@ -184,7 +184,7 @@ define([
 							saveFileContents(fileClient, fileMetadata, {sourceLocation: data.sourceLocation}, function() {
 								if (window.confirm(messages["ContentSavedMsg"])) {
 									// go to the navigator
-									window.location.href = orionHome + "/edit/edit.html#" + fileMetadata.Parents[0].ChildrenLocation; //$NON-NLS-0$
+									window.location.href = orionHome + "/edit.html#" + fileMetadata.Parents[0].ChildrenLocation; //$NON-NLS-0$
 								} else {
 									loadContent();
 								}

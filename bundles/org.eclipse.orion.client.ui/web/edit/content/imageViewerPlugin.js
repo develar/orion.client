@@ -113,7 +113,7 @@ define([
 		"default": true, //$NON-NLS-0$
 		name: messages["Orion Image Viewer"], //$NON-NLS-0$
 		nls: "orion/nls/messages", //$NON-NLS-0$
-		uriTemplate: "../edit/edit.html#{,Location,params*},editor=" + EDITOR_ID //$NON-NLS-0$
+		uriTemplate: "../edit.html#{,Location,params*},editor=" + EDITOR_ID //$NON-NLS-0$
 	});
 
 	provider.registerService("orion.navigate.openWith", {}, { //$NON-NLS-0$

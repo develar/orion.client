@@ -136,7 +136,7 @@ function(messages, lib, i18nUtil, mSearchUtils, mSearchCrawler, navigatorRendere
 							params.find = searchHelper.inFileQuery.searchStr;
 							params.regEx = searchHelper.inFileQuery.wildCard ? true : undefined;
 						}
-						var resourceLink = navigatorRenderer.createLink("/edit/edit.html", item, commandRegistry, contentTypeService,
+						var resourceLink = navigatorRenderer.createLink("/edit.html", item, commandRegistry, contentTypeService,
 							openWithCommands, {
 								"aria-describedby": (resource.folderName ? resource.folderName : resource.path).replace(/[^a-zA-Z0-9_\.:\-]/g,''), //$NON-NLS-0$
 								style: {

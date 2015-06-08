@@ -59,7 +59,7 @@ define([
 		tooltip: "Edit code",
 		category: "edit",
 		order: 1000, // low priority
-		uriTemplate: "{+OrionHome}/edit/edit.html"
+		uriTemplate: "{+OrionHome}/edit.html"
 	});
 	provider.registerService("orion.page.link", serviceImpl, {
 		name: messages["ShellLinkWorkspace"],
@@ -92,9 +92,9 @@ define([
 			variableName: "EditorLocation",
 			replacements: [{pattern: "\\?depth=1$", replacement: ""}]  /* strip off depth=1 if it is there because we always add it back */
 		}],
-		uriTemplate: "{+OrionHome}/edit/edit.html#{,EditorLocation}"
+		uriTemplate: "{+OrionHome}/edit.html#{,EditorLocation}"
 		// use this uri if we ever want to drill the LHS nav into the EditorLocation
-		// uriTemplate: "{+OrionHome}/edit/edit.html#{,EditorLocation},navigate={,EditorLocation}?depth=1"
+		// uriTemplate: "{+OrionHome}/edit.html#{,EditorLocation},navigate={,EditorLocation}?depth=1"
 	});
 
 	// Links to an Editor view of the parent folder (Enclosing Folder)
@@ -109,7 +109,7 @@ define([
 			variableName: "EditorLocation",
 			replacements: [{pattern: "\\?depth=1$", replacement: ""}]  /* strip off depth=1 if it is there because we always add it back */
 		}],
-		uriTemplate: "{+OrionHome}/edit/edit.html#{,EditorLocation}"
+		uriTemplate: "{+OrionHome}/edit.html#{,EditorLocation}"
 	});
 
 	// Links to an Editor view of the topmost parent folder (Project Root)
@@ -124,7 +124,7 @@ define([
 			variableName: "EditorLocation",
 			replacements: [{pattern: "\\?depth=1$", replacement: ""}]  /* strip off depth=1 if it is there because we always add it back */
 		}],
-		uriTemplate: "{+OrionHome}/edit/edit.html#{,EditorLocation}"
+		uriTemplate: "{+OrionHome}/edit.html#{,EditorLocation}"
 	});
 
 	// Uncomment this if we ever want "Project Root" to be the 1st link in the "edit" slot when you're already viewing a project.
@@ -139,7 +139,7 @@ define([
 //			source: "Parents:length",
 //			match: 0
 //		}],
-//		uriTemplate: "{+OrionHome}/edit/edit.html#{,Location}"
+//		uriTemplate: "{+OrionHome}/edit.html#{,Location}"
 //	});
 
 //	// Removed, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=427617
@@ -153,7 +153,7 @@ define([
 //		validationProperties: [{
 //			source: "NoTarget"
 //		}],
-//		uriTemplate: "{+OrionHome}/edit/edit.html#"
+//		uriTemplate: "{+OrionHome}/edit.html#"
 //	});
 
 	provider.registerService("orion.page.link.user", null, {

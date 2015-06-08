@@ -124,7 +124,7 @@ define([
         */
        convertToURL: function convertToURL(file) {
            if(file) {
-               return 'https://orion.eclipse.org/edit/edit.html#'+file.location;
+               return 'https://orion.eclipse.org/edit.html#'+file.location;
            }
            return null;
        },

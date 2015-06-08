@@ -292,7 +292,7 @@ function(messages, mBootstrap, objects, Deferred, CFClient, mCfUtil, mFileClient
 						}
 
 						cFService.pushApp(target, appName, decodeURIComponent(project.ContentLocation + appPath), manifest, appPackager, mergedInstrumentation).then(function(result) {
-							var expandedURL = new URITemplate("{+OrionHome}/edit/edit.html#{,ContentLocation}").expand({ //$NON-NLS-0$
+							var expandedURL = new URITemplate("{+OrionHome}/edit.html#{,ContentLocation}").expand({ //$NON-NLS-0$
 								OrionHome: PageLinks.getOrionHome(),
 								ContentLocation: project.ContentLocation,
 							});

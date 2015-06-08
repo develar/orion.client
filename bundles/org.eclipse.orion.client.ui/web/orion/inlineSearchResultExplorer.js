@@ -1063,7 +1063,7 @@ function(messages, Deferred, lib, mContentTypes, i18nUtil, mExplorer, mFileClien
 						var rootURL = this.fileClient.fileServiceRootURL(loc);
 						path = loc.substring(rootURL.length); //remove file service root from path
 					}
-					resultLocation.push({linkLocation: "/edit/edit.html" +"#" + loc, location: loc, path: path, name: hit.Name, lastModified: hit.LastModified}); //$NON-NLS-1$ //$NON-NLS-0$
+					resultLocation.push({linkLocation: "/edit.html" +"#" + loc, location: loc, path: path, name: hit.Name, lastModified: hit.LastModified}); //$NON-NLS-1$ //$NON-NLS-0$
 				}
 			}
 		}

@@ -93,7 +93,7 @@ define([
 		id: EDITOR_ID,
 		name: messages["Orion JSON Editor"], //$NON-NLS-0$
 		nls: "orion/nls/messages", //$NON-NLS-0$
-		uriTemplate: "../edit/edit.html#{,Location,params*},editor=" + EDITOR_ID //$NON-NLS-0$
+		uriTemplate: "../edit.html#{,Location,params*},editor=" + EDITOR_ID //$NON-NLS-0$
 	});
 		
 	provider.registerService("orion.navigate.openWith", {}, { //$NON-NLS-0$
